@@ -745,9 +745,9 @@ const cols={
   prazos:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   audiencias:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente/Parte'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
-  processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contrária'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
-  receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'cliente',l:'Cliente'},{k:'processo',l:'Processo'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'cliente',l:'Cliente'},{k:'processo',l:'Processo'},{k:'tipo',l:'Tipo'},{k:'recorrente',l:'Recorrência'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   despesas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'fornecedor',l:'Fornecedor'},{k:'categoria',l:'Categoria'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
 };
 
@@ -759,6 +759,12 @@ function renderTable(type) {
   let rows=[...(dados[type]||[])];
   tc.querySelectorAll('.filter-row select').forEach(sel=>{ if(sel.value) rows=rows.filter(r=>Object.values(r).some(v=>String(v)===sel.value)); });
   if(search) rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(search)));
+  if(type==='prazos')    rows.sort((a,b)=>(a.vencimento||'').localeCompare(b.vencimento||''));
+  if(type==='audiencias') rows.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  if(type==='reunioes')  rows.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  if(type==='tarefas')   rows.sort((a,b)=>(a.prazo||'zzz').localeCompare(b.prazo||'zzz'));
+  if(type==='receitas')  rows.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  if(type==='despesas')  rows.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
 
   const c=cols[type];
   if(!rows.length){container.innerHTML='<div class="empty-state"><p>Nenhum registro encontrado.</p></div>';return;}
@@ -831,6 +837,7 @@ const modalForms={
   processo:{title:'Novo Processo',fields:[
     {n:'numero',l:'Nº do Processo (CNJ)',type:'text',full:true,req:true},
     {n:'cliente',l:'Cliente/Parte',type:'text',req:true},
+    {n:'parte_contraria',l:'Parte Contrária',type:'text'},
     {n:'polo',l:'Polo',type:'select',opts:['Ativo','Passivo','Terceiro Interessado']},
     {n:'area',l:'Área',type:'select',opts:['Cível','Trabalhista','Consumidor','Família','Imobiliário','Previdenciário','Administrativo','Criminal']},
     {n:'tribunal',l:'Tribunal',type:'select',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},
@@ -852,8 +859,10 @@ const modalForms={
     {n:'cliente',l:'Cliente',type:'text',req:true},
     {n:'processo',l:'Nº do Processo (se houver)',type:'text'},
     {n:'valor',l:'Valor (R$)',type:'number',req:true},
-    {n:'data',l:'Data',type:'date',req:true},
-    {n:'tipo',l:'Tipo',type:'select',opts:['Honorários Contratuais','Honorários Êxito','Consulta','Elaboração de Documento','Outros']},
+    {n:'data',l:'Data da 1ª Parcela',type:'date',req:true},
+    {n:'tipo',l:'Tipo',type:'select',opts:['Honorários Contratuais','Honorários Êxito','Assessoria Mensal','Consulta','Elaboração de Documento','Outros']},
+    {n:'recorrente',l:'Recorrência',type:'select',opts:['Não','Mensal','Bimestral','Trimestral','Semestral','Anual']},
+    {n:'parcelas',l:'Nº de Parcelas (se recorrente)',type:'number'},
     {n:'status',l:'Status',type:'select',opts:['Recebido','Pendente','Parcial','Inadimplente']},
     {n:'observacao',l:'Observações',type:'textarea',full:true},
   ]},
@@ -909,6 +918,27 @@ function saveItem(){
   if(editingId){
     const idx=dados[key].findIndex(r=>r.id===editingId);
     if(idx>=0) dados[key][idx]={...dados[key][idx],...obj};
+  } else if(key==='receitas' && obj.recorrente && obj.recorrente!=='Não' && parseInt(obj.parcelas)>1){
+    // Gerar parcelas recorrentes
+    const intervalos={'Mensal':1,'Bimestral':2,'Trimestral':3,'Semestral':6,'Anual':12};
+    const meses = intervalos[obj.recorrente]||1;
+    const total = Math.min(parseInt(obj.parcelas)||1, 120);
+    let maxId=dados[key].length?Math.max(...dados[key].map(r=>r.id)):0;
+    for(let i=0;i<total;i++){
+      const dt = new Date(obj.data+'T12:00:00');
+      dt.setMonth(dt.getMonth()+(i*meses));
+      const dataStr = dt.toISOString().split('T')[0];
+      dados[key].push({
+        ...obj,
+        id: ++maxId,
+        data: dataStr,
+        descricao: obj.descricao + (total>1?' ('+(i+1)+'/'+total+')':''),
+        recorrente: i===0?obj.recorrente:'—',
+        parcelas: '',
+        status: i===0?obj.status:'Pendente'
+      });
+    }
+    toast(total+' parcelas geradas com sucesso!','success');
   } else {
     const maxId=dados[key].length?Math.max(...dados[key].map(r=>r.id)):0;
     dados[key].push({id:maxId+1,...obj});
@@ -939,7 +969,7 @@ function exportarExcel(){
   [{name:'Prazos',data:dados.prazos,cols:['descricao','processo','cliente','tribunal','vencimento','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Tribunal','Vencimento','Tipo','Status','Observações']},
    {name:'Audiências',data:dados.audiencias,cols:['descricao','processo','cliente','data','hora','local','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Data','Hora','Local','Tipo','Status','Observações']},
    {name:'Reuniões',data:dados.reunioes,cols:['tipo','cliente','data','hora','local','assunto','status','observacao'],headers:['Tipo','Cliente','Data','Hora','Local','Assunto','Status','Observações']},
-   {name:'Processos',data:dados.processos,cols:['numero','cliente','polo','area','tribunal','vara','fase','status','observacao'],headers:['Nº Processo','Cliente','Polo','Área','Tribunal','Vara/Juízo','Fase','Status','Observações']},
+   {name:'Processos',data:dados.processos,cols:['numero','cliente','parte_contraria','polo','area','tribunal','vara','fase','status','observacao'],headers:['Nº Processo','Cliente','Parte Contrária','Polo','Área','Tribunal','Vara/Juízo','Fase','Status','Observações']},
    {name:'Tarefas',data:dados.tarefas,cols:['descricao','processo','cliente','prazo','prioridade','status','observacao'],headers:['Tarefa','Nº Processo','Cliente','Prazo','Prioridade','Status','Observações']},
    {name:'Receitas',data:dados.receitas,cols:['data','descricao','cliente','processo','tipo','valor','status','observacao'],headers:['Data','Descrição','Cliente','Processo','Tipo','Valor (R$)','Status','Observações']},
    {name:'Despesas',data:dados.despesas,cols:['data','descricao','fornecedor','categoria','valor','status','observacao'],headers:['Data','Descrição','Fornecedor','Categoria','Valor (R$)','Status','Observações']},
