@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestão Jurídica — Tarcísio Freire</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --ink:#1a1a2e;--ink2:#16213e;--gold:#c9a84c;--gold-light:#e8c97a;
+    --cream:#f9f6ef;--cream2:#f2ede0;--green:#2e7d5e;--green-light:#e6f4ef;
+    --red:#b94040;--red-light:#fdf0f0;--blue:#2563a8;--blue-light:#eef4fc;
+    --amber:#c07a1a;--amber-light:#fdf4e6;--border:#d9d0bc;
+    --shadow:0 2px 16px rgba(26,26,46,0.10);--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--ink2);display:flex;flex-direction:column;z-index:100;border-right:2px solid rgba(201,168,76,0.25);}
+  .brand{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  .brand-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:0.3px;line-height:1.3;}
+  .brand-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
+  .nav{flex:1;padding:16px 0;overflow-y:auto;}
+  .nav-section{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:12px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13.5px;transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:#fff;background:rgba(255,255,255,0.05);}
+  .nav-item.active{color:var(--gold);background:rgba(201,168,76,0.1);border-left-color:var(--gold);}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0;}
+  .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center;}
+
+  .drive-status{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.08);}
+  .drive-btn{width:100%;padding:9px 12px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .15s;}
+  .drive-btn.conectar{background:var(--gold);color:var(--ink2);}
+  .drive-btn.conectar:hover{background:var(--gold-light);}
+  .drive-btn.conectado{background:rgba(46,125,94,0.2);color:#6fcfa8;border:1px solid rgba(111,207,168,0.3);cursor:default;}
+  .drive-user{font-size:10.5px;color:rgba(255,255,255,0.35);margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drive-sync-row{display:flex;gap:6px;margin-top:6px;}
+  .drive-sync-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+  .drive-sync-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
+  .drive-sync-btn.sair{color:rgba(185,64,64,0.7);border-color:rgba(185,64,64,0.2);}
+  .drive-sync-btn.sair:hover{background:rgba(185,64,64,0.15);color:var(--red);}
+
+  .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+  .sync-dot.ok{background:#6fcfa8;}
+  .sync-dot.saving{background:var(--gold);animation:pulse 1s infinite;}
+  .sync-dot.error{background:var(--red);}
+  .sync-dot.offline{background:#555;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .main{margin-left:240px;min-height:100vh;}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,0.04);}
+  .topbar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);flex:1;}
+  .topbar-date{font-size:12px;color:#888;}
+  .content{padding:28px 32px;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+  .stat-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .stat-card.prazo::before{background:var(--red);}
+  .stat-card.audiencia::before{background:var(--blue);}
+  .stat-card.tarefa::before{background:var(--amber);}
+  .stat-card.processo::before{background:var(--green);}
+  .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#888;font-weight:600;}
+  .stat-number{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--ink);line-height:1.1;margin:6px 0 4px;}
+  .stat-sub{font-size:11.5px;color:#999;}
+
+  .agenda-hoje{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);margin-bottom:28px;}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .section-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .section-title svg{width:18px;height:18px;color:var(--gold);}
+  .agenda-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--cream2);}
+  .agenda-item:last-child{border-bottom:none;}
+  .agenda-time{font-size:12px;font-weight:600;color:var(--gold);min-width:50px;padding-top:2px;}
+  .agenda-info{flex:1;}
+  .agenda-desc{font-size:13.5px;font-weight:500;}
+  .agenda-meta{font-size:11.5px;color:#999;margin-top:2px;}
+
+  .view{display:none;}.view.active{display:block;}
+
+  .table-container{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
+  .table-toolbar{padding:16px 20px;border-bottom:1px solid var(--cream2);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .search-input{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--cream);color:var(--ink);outline:none;}
+  .search-input:focus{border-color:var(--gold);background:#fff;}
+
+  .btn{padding:8px 16px;border-radius:7px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap;}
+  .btn-primary{background:var(--ink2);color:#fff;}.btn-primary:hover{background:var(--gold);color:var(--ink2);}
+  .btn-gold{background:var(--gold);color:var(--ink2);}.btn-gold:hover{background:var(--gold-light);}
+  .btn-ghost{background:none;color:var(--ink);border:1px solid var(--border);}.btn-ghost:hover{background:var(--cream2);}
+  .btn-sm{padding:5px 10px;font-size:11.5px;}
+  .btn-danger{background:var(--red-light);color:var(--red);border:1px solid #f3c5c5;}.btn-danger:hover{background:var(--red);color:#fff;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{text-align:left;padding:10px 16px;background:var(--cream2);color:#666;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+  tbody tr{border-bottom:1px solid var(--cream2);transition:background .1s;}
+  tbody tr:hover{background:#fafaf7;}
+  tbody tr:last-child{border-bottom:none;}
+  td{padding:11px 16px;vertical-align:middle;}
+
+  .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.3px;}
+  .badge-red{background:var(--red-light);color:var(--red);}
+  .badge-green{background:var(--green-light);color:var(--green);}
+  .badge-blue{background:var(--blue-light);color:var(--blue);}
+  .badge-amber{background:var(--amber-light);color:var(--amber);}
+  .badge-gray{background:#f0f0f0;color:#666;}
+  .urgente{background:#fff3f3;}
+
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,0.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+  .modal-overlay.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,0.18);}
+  .modal-header{padding:22px 24px 16px;border-bottom:1px solid var(--cream2);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);}
+  .modal-close{background:none;border:none;cursor:pointer;font-size:22px;color:#aaa;line-height:1;padding:4px;border-radius:4px;}
+  .modal-close:hover{color:var(--red);background:var(--red-light);}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--cream2);display:flex;gap:10px;justify-content:flex-end;}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-group.full{grid-column:1/-1;}
+  .form-label{font-size:12px;font-weight:600;color:#666;letter-spacing:0.3px;text-transform:uppercase;}
+  .form-control{padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:#fff;outline:none;transition:border .15s;}
+  .form-control:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.12);}
+  select.form-control{cursor:pointer;}
+  textarea.form-control{resize:vertical;min-height:70px;}
+
+  .empty-state{text-align:center;padding:48px 20px;color:#bbb;}
+  .empty-state p{font-size:13px;}
+
+  .countdown{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;}
+  .countdown.urgente{color:var(--red);}
+  .countdown.atencao{color:var(--amber);}
+  .countdown.ok{color:var(--green);}
+  .countdown.vencido{color:#b0b0b0;text-decoration:line-through;}
+
+  .actions{display:flex;gap:6px;}
+  .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid var(--cream2);background:var(--cream);}
+  .filter-row select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer;}
+  .filter-label{font-size:11.5px;color:#888;font-weight:600;}
+
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--ink2);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,0.25);display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .3s;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{border-left:4px solid #6fcfa8;}
+  .toast.error{border-left:4px solid var(--red);}
+  .toast.info{border-left:4px solid var(--gold);}
+
+  @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr);}.form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}}
+  @media(max-width:700px){.sidebar{width:200px;}.main{margin-left:200px;}.content{padding:16px;}.topbar{padding:12px 16px;}}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-title">Tarcísio Freire<br>Advocacia</div>
+    <div class="brand-sub">Gestão Jurídica</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Visão Geral</div>
+    <div class="nav-item active" onclick="showView('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-section">Agenda Jurídica</div>
+    <div class="nav-item" onclick="showView('prazos',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      Prazos <span class="nav-badge" id="badge-prazos">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('audiencias',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      Audiências
+    </div>
+    <div class="nav-item" onclick="showView('reunioes',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      Reuniões &amp; Atend.
+    </div>
+    <div class="nav-section">Controle</div>
+    <div class="nav-item" onclick="showView('processos',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+      Processos
+    </div>
+    <div class="nav-item" onclick="showView('tarefas',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Tarefas <span class="nav-badge" id="badge-tarefas">0</span>
+    </div>
+  </nav>
+  <div class="drive-status">
+    <button class="drive-btn conectar" id="drive-btn" onclick="loginGoogle()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Conectar Google Drive
+    </button>
+    <div class="drive-user" id="drive-user" style="display:none"></div>
+    <div class="drive-sync-row" id="drive-sync-row" style="display:none">
+      <button class="drive-sync-btn" onclick="syncDrive('upload')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        Salvar
+      </button>
+      <button class="drive-sync-btn" onclick="syncDrive('download')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+        Carregar
+      </button>
+      <button class="drive-sync-btn sair" onclick="logoutGoogle()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-date" id="topbar-date"></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span id="sync-status" style="display:flex;align-items:center;gap:5px;font-size:11.5px;color:#aaa;">
+        <span class="sync-dot offline" id="sync-dot"></span>
+        <span id="sync-label">Offline</span>
+      </span>
+      <button class="btn btn-gold" onclick="exportarExcel()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="view-dashboard" class="view active">
+      <div class="stats-grid">
+        <div class="stat-card prazo"><div class="stat-label">Prazos Ativos</div><div class="stat-number" id="stat-prazos">0</div><div class="stat-sub" id="stat-prazos-sub">–</div></div>
+        <div class="stat-card audiencia"><div class="stat-label">Audiências</div><div class="stat-number" id="stat-audiencias">0</div><div class="stat-sub" id="stat-aud-sub">–</div></div>
+        <div class="stat-card tarefa"><div class="stat-label">Tarefas Pendentes</div><div class="stat-number" id="stat-tarefas">0</div><div class="stat-sub" id="stat-tar-sub">–</div></div>
+        <div class="stat-card processo"><div class="stat-label">Processos</div><div class="stat-number" id="stat-processos">0</div><div class="stat-sub" id="stat-proc-sub">–</div></div>
+      </div>
+      <div class="agenda-hoje">
+        <div class="section-header">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            Agenda de Hoje
+          </div>
+        </div>
+        <div id="agenda-hoje-list"></div>
+      </div>
+      <div class="table-container">
+        <div class="table-toolbar">
+          <div class="section-title" style="flex:1;font-size:15px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            Prazos Críticos (próximos 7 dias)
+          </div>
+        </div>
+        <div id="prazos-criticos-list"></div>
+      </div>
+    </div>
+
+    <div id="view-prazos" class="view">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="Buscar prazo, processo, cliente…" oninput="renderTable('prazos')">
+          <button class="btn btn-primary" onclick="openModal('prazo')">+ Novo Prazo</button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Status:</span>
+          <select onchange="renderTable('prazos')"><option value="">Todos</option><option>Pendente</option><option>Concluído</option><option>Vencido</option></select>
+          <span class="filter-label">Tribunal:</span>
+          <select onchange="renderTable('prazos')"><option value="">Todos</option><option>TJ-BA</option><option>TRT-5</option><option>STJ</option><option>TRF-1</option><option>JEC</option></select>
+        </div>
+        <div id="table-prazos"></div>
+      </div>
+    </div>
+
+    <div id="view-audiencias" class="view">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="Buscar audiência…" oninput="renderTable('audiencias')">
+          <button class="btn btn-primary" onclick="openModal('audiencia')">+ Nova Audiência</button>
+        </div>
+        <div id="table-audiencias"></div>
+      </div>
+    </div>
+
+    <div id="view-reunioes" class="view">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="Buscar reunião ou atendimento…" oninput="renderTable('reunioes')">
+          <button class="btn btn-primary" onclick="openModal('reuniao')">+ Novo Registro</button>
+        </div>
+        <div id="table-reunioes"></div>
+      </div>
+    </div>
+
+    <div id="view-processos" class="view">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="Buscar nº processo, cliente, vara…" oninput="renderTable('processos')">
+          <button class="btn btn-primary" onclick="openModal('processo')">+ Novo Processo</button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Área:</span>
+          <select onchange="renderTable('processos')"><option value="">Todas</option><option>Cível</option><option>Trabalhista</option><option>Consumidor</option><option>Família</option><option>Imobiliário</option><option>Previdenciário</option></select>
+          <span class="filter-label">Fase:</span>
+          <select onchange="renderTable('processos')"><option value="">Todas</option><option>Conhecimento</option><option>Recursal</option><option>Execução</option><option>Arquivado</option></select>
+        </div>
+        <div id="table-processos"></div>
+      </div>
+    </div>
+
+    <div id="view-tarefas" class="view">
+      <div class="table-container">
+        <div class="table-toolbar">
+          <input class="search-input" placeholder="Buscar tarefa…" oninput="renderTable('tarefas')">
+          <button class="btn btn-primary" onclick="openModal('tarefa')">+ Nova Tarefa</button>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">Prioridade:</span>
+          <select onchange="renderTable('tarefas')"><option value="">Todas</option><option>Alta</option><option>Média</option><option>Baixa</option></select>
+          <span class="filter-label">Status:</span>
+          <select onchange="renderTable('tarefas')"><option value="">Todas</option><option>Pendente</option><option>Em andamento</option><option>Concluída</option></select>
+        </div>
+        <div id="table-tarefas"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Novo Item</div>
+      <button class="modal-close" onclick="closeModal()">&#215;</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveItem()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// GOOGLE DRIVE CONFIG
+// ============================================================
+const CLIENT_ID = '930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILE_NAME = 'gestao_juridica_dados.json';
+
+let tokenClient = null;
+let accessToken = null;
+let driveFileId = null;
+let userEmail = '';
+let syncTimeout = null;
+
+// ============================================================
+// DADOS
+// ============================================================
+let dados = { prazos:[], audiencias:[], reunioes:[], processos:[], tarefas:[] };
+let editingId = null;
+
+function hoje() { return new Date().toISOString().split('T')[0]; }
+
+function loadLocal() {
+  try {
+    const s = localStorage.getItem('gestao_juridica_v3');
+    if (s) dados = JSON.parse(s);
+    const meta = localStorage.getItem('gestao_juridica_meta');
+    if (meta) { const m = JSON.parse(meta); driveFileId = m.fileId||null; userEmail = m.email||''; }
+  } catch(e) {}
+  if (!dados.prazos.length && !dados.processos.length) seedData();
+}
+
+function saveLocal() {
+  localStorage.setItem('gestao_juridica_v3', JSON.stringify(dados));
+}
+
+function saveData() {
+  saveLocal();
+  if (accessToken) {
+    clearTimeout(syncTimeout);
+    setSyncStatus('saving','Salvando…');
+    syncTimeout = setTimeout(() => syncDrive('upload', true), 1500);
+  }
+}
+
+function seedData() {
+  function fmt(d) { const dt = new Date(); dt.setDate(dt.getDate()+d); return dt.toISOString().split('T')[0]; }
+  dados.processos = [
+    {id:1,numero:'0009147-43.2010.8.05.0274',cliente:'Najara Alves Pereira',polo:'Ativo',area:'Cível',tribunal:'TJ-BA',vara:'5ª Vara Cível',fase:'Recursal',status:'Ativo',observacao:'Recurso Especial – gratuidade judiciária'},
+    {id:2,numero:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',polo:'Passivo',area:'Trabalhista',tribunal:'TRT-5',vara:'2ª Vara do Trabalho',fase:'Execução',status:'Ativo',observacao:'Impugnação cálculos liquidação'},
+    {id:3,numero:'8004720-35.2024.8.05.0124',cliente:'Ricardo Silva Araújo',polo:'Ativo',area:'Consumidor',tribunal:'JEC',vara:'JEC Vitória da Conquista',fase:'Conhecimento',status:'Ativo',observacao:'Embargos de declaração'},
+  ];
+  dados.prazos = [
+    {id:1,descricao:'Contrarrazões apelação',processo:'0009147-43.2010.8.05.0274',cliente:'Najara Alves Pereira',tribunal:'STJ',vencimento:fmt(3),tipo:'Recursal',status:'Pendente',observacao:''},
+    {id:2,descricao:'Impugnação cálculos',processo:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',tribunal:'TRT-5',vencimento:fmt(7),tipo:'Processual',status:'Pendente',observacao:''},
+    {id:3,descricao:'Embargos de declaração',processo:'8004720-35.2024.8.05.0124',cliente:'Ricardo Silva Araújo',tribunal:'JEC',vencimento:fmt(1),tipo:'Recursal',status:'Pendente',observacao:''},
+  ];
+  dados.audiencias = [
+    {id:1,descricao:'Audiência de instrução',processo:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',data:fmt(5),hora:'09:00',local:'2ª VT – Vitória da Conquista',tipo:'Instrução',status:'Agendada',observacao:''},
+  ];
+  dados.reunioes = [
+    {id:1,tipo:'Atendimento',cliente:'Raquel Formigli Rebouças Martins',data:fmt(2),hora:'14:00',local:'Escritório',assunto:'Inventário – Toledo & Toledo',status:'Agendado',observacao:'Levar documentos do espólio'},
+  ];
+  dados.tarefas = [
+    {id:1,descricao:'Verificar publicações PROJURIS',processo:'',cliente:'',prazo:hoje(),prioridade:'Alta',status:'Pendente',observacao:''},
+    {id:2,descricao:'Petição inicial – usucapião Fazenda Caratinga',processo:'8000732-46.2022.8.05.0198',cliente:'Paulo Ivo de Oliveira',prazo:fmt(10),prioridade:'Média',status:'Pendente',observacao:''},
+  ];
+  saveLocal();
+}
+
+// ============================================================
+// GOOGLE AUTH
+// ============================================================
+function initGoogle() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { toast('Erro ao autenticar: ' + resp.error, 'error'); return; }
+      accessToken = resp.access_token;
+      await fetchUserInfo();
+      updateDriveUI(true);
+      setSyncStatus('ok','Drive conectado');
+      toast('Google Drive conectado!', 'success');
+      await syncDrive('download', true);
+    }
+  });
+}
+
+async function fetchUserInfo() {
+  try {
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{ Authorization:'Bearer '+accessToken } });
+    const u = await r.json();
+    userEmail = u.email || '';
+    document.getElementById('drive-user').textContent = userEmail;
+    localStorage.setItem('gestao_juridica_meta', JSON.stringify({fileId:driveFileId, email:userEmail}));
+  } catch(e) {}
+}
+
+function loginGoogle() {
+  if (!tokenClient) { toast('API Google carregando, aguarde…','info'); return; }
+  tokenClient.requestAccessToken();
+}
+
+function logoutGoogle() {
+  if (accessToken) google.accounts.oauth2.revoke(accessToken, ()=>{});
+  accessToken = null; driveFileId = null; userEmail = '';
+  localStorage.removeItem('gestao_juridica_meta');
+  updateDriveUI(false);
+  setSyncStatus('offline','Offline');
+  toast('Desconectado do Google Drive.','info');
+}
+
+function updateDriveUI(conectado) {
+  const btn = document.getElementById('drive-btn');
+  const userEl = document.getElementById('drive-user');
+  const syncRow = document.getElementById('drive-sync-row');
+  if (conectado) {
+    btn.className = 'drive-btn conectado';
+    btn.innerHTML = '<span class="sync-dot ok"></span> Drive Conectado';
+    btn.onclick = null;
+    userEl.style.display = 'block';
+    userEl.textContent = userEmail;
+    syncRow.style.display = 'flex';
+  } else {
+    btn.className = 'drive-btn conectar';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Conectar Google Drive';
+    btn.onclick = loginGoogle;
+    userEl.style.display = 'none';
+    syncRow.style.display = 'none';
+  }
+}
+
+function setSyncStatus(state, label) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-label').textContent = label;
+}
+
+// ============================================================
+// GOOGLE DRIVE SYNC
+// ============================================================
+async function findOrCreateFile() {
+  const q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
+  const r = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id)', {
+    headers:{ Authorization:'Bearer '+accessToken }
+  });
+  const data = await r.json();
+  if (data.files && data.files.length > 0) {
+    driveFileId = data.files[0].id;
+  } else {
+    const cr = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method:'POST',
+      headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'application/json' },
+      body: JSON.stringify({ name: DRIVE_FILE_NAME, parents: ['appDataFolder'] })
+    });
+    const f = await cr.json();
+    driveFileId = f.id;
+  }
+  localStorage.setItem('gestao_juridica_meta', JSON.stringify({fileId:driveFileId, email:userEmail}));
+}
+
+async function syncDrive(direction, silent=false) {
+  if (!accessToken) { if(!silent) toast('Conecte o Google Drive primeiro.','info'); return; }
+  setSyncStatus('saving', direction==='upload' ? 'Salvando…' : 'Carregando…');
+  try {
+    if (!driveFileId) await findOrCreateFile();
+
+    if (direction === 'upload') {
+      const boundary = 'frontier314159';
+      const meta = JSON.stringify({ name: DRIVE_FILE_NAME });
+      const content = JSON.stringify(dados);
+      const body = '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+boundary+'--';
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=multipart', {
+        method:'PATCH',
+        headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'multipart/related; boundary="'+boundary+'"' },
+        body
+      });
+      setSyncStatus('ok','Salvo no Drive');
+      if(!silent) toast('Dados salvos no Google Drive ✓','success');
+
+    } else {
+      const r = await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media', {
+        headers:{ Authorization:'Bearer '+accessToken }
+      });
+      if (r.ok) {
+        const text = await r.text();
+        if (text && text.trim().startsWith('{')) {
+          dados = JSON.parse(text);
+          saveLocal();
+          renderDashboard();
+          setSyncStatus('ok','Carregado do Drive');
+          if(!silent) toast('Dados carregados do Google Drive ✓','success');
+        } else {
+          await syncDrive('upload', true);
+        }
+      } else {
+        setSyncStatus('error','Erro no Drive');
+        if(!silent) toast('Erro ao carregar dados.','error');
+      }
+    }
+  } catch(e) {
+    setSyncStatus('error','Erro');
+    if(!silent) toast('Erro: '+e.message,'error');
+  }
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast '+type+' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const titles = {dashboard:'Dashboard',prazos:'Prazos Processuais',audiencias:'Audiências',reunioes:'Reuniões & Atendimentos',processos:'Processos',tarefas:'Tarefas'};
+
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  document.getElementById('page-title').textContent = titles[name];
+  name !== 'dashboard' ? renderTable(name) : renderDashboard();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function diasRestantes(v) {
+  const h = new Date(); h.setHours(0,0,0,0);
+  return Math.round((new Date(v+'T00:00:00') - h) / 86400000);
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return dd+'/'+m+'/'+y;
+}
+function countdownBadge(venc, status) {
+  if(status==='Concluído'||status==='Realizado') return '<span class="badge badge-green">'+status+'</span>';
+  const d = diasRestantes(venc);
+  if(d<0) return '<span class="countdown vencido">Vencido '+Math.abs(d)+'d</span>';
+  if(d===0) return '<span class="countdown urgente">⚠ Hoje!</span>';
+  if(d<=3) return '<span class="countdown urgente">⚠ '+d+'d</span>';
+  if(d<=7) return '<span class="countdown atencao">⏰ '+d+'d</span>';
+  return '<span class="countdown ok">'+d+'d</span>';
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const pend = dados.prazos.filter(p=>p.status==='Pendente');
+  const aud = dados.audiencias.filter(a=>a.status==='Agendada');
+  const tar = dados.tarefas.filter(t=>t.status!=='Concluída');
+  const proc = dados.processos.filter(p=>p.status==='Ativo');
+
+  document.getElementById('stat-prazos').textContent = pend.length;
+  document.getElementById('stat-prazos-sub').textContent = pend.filter(p=>diasRestantes(p.vencimento)<=3).length+' críticos (≤3 dias)';
+  document.getElementById('stat-audiencias').textContent = aud.length;
+  document.getElementById('stat-aud-sub').textContent = aud.length ? 'próxima: '+fmtDate([...aud].sort((a,b)=>a.data.localeCompare(b.data))[0].data) : 'nenhuma agendada';
+  document.getElementById('stat-tarefas').textContent = tar.length;
+  document.getElementById('stat-tar-sub').textContent = tar.filter(t=>t.prioridade==='Alta').length+' de alta prioridade';
+  document.getElementById('stat-processos').textContent = proc.length;
+  document.getElementById('stat-proc-sub').textContent = dados.processos.length+' total';
+  document.getElementById('badge-prazos').textContent = pend.filter(p=>diasRestantes(p.vencimento)<=5).length;
+  document.getElementById('badge-tarefas').textContent = tar.filter(t=>t.prioridade==='Alta').length;
+
+  const h = hoje();
+  const itens = [
+    ...dados.prazos.filter(p=>p.vencimento===h).map(p=>({hora:'–',desc:p.descricao,meta:'Prazo — '+p.cliente})),
+    ...dados.audiencias.filter(a=>a.data===h).map(a=>({hora:a.hora,desc:a.descricao,meta:'Audiência — '+a.cliente})),
+    ...dados.reunioes.filter(r=>r.data===h).map(r=>({hora:r.hora,desc:r.assunto,meta:r.tipo+' — '+r.cliente})),
+  ].sort((a,b)=>a.hora.localeCompare(b.hora));
+
+  document.getElementById('agenda-hoje-list').innerHTML = itens.length
+    ? itens.map(i=>'<div class="agenda-item"><div class="agenda-time">'+i.hora+'</div><div class="agenda-info"><div class="agenda-desc">'+i.desc+'</div><div class="agenda-meta">'+i.meta+'</div></div></div>').join('')
+    : '<div class="empty-state"><p>Nenhum compromisso para hoje.</p></div>';
+
+  const criticos = dados.prazos.filter(p=>p.status==='Pendente'&&diasRestantes(p.vencimento)<=7).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+  document.getElementById('prazos-criticos-list').innerHTML = criticos.length
+    ? '<table><thead><tr><th>Prazo</th><th>Processo</th><th>Cliente</th><th>Tribunal</th><th>Vencimento</th><th>Restam</th></tr></thead><tbody>'+criticos.map(p=>'<tr class="'+(diasRestantes(p.vencimento)<=2?'urgente':'')+'"><td><strong>'+p.descricao+'</strong></td><td style="font-size:11.5px;color:#888">'+( p.processo||'—')+'</td><td>'+p.cliente+'</td><td><span class="badge badge-blue">'+p.tribunal+'</span></td><td>'+fmtDate(p.vencimento)+'</td><td>'+countdownBadge(p.vencimento,p.status)+'</td></tr>').join('')+'</tbody></table>'
+    : '<div class="empty-state"><p>Sem prazos críticos nos próximos 7 dias. ✓</p></div>';
+}
+
+// ============================================================
+// TABLES
+// ============================================================
+const cols = {
+  prazos:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  audiencias:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente/Parte'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+};
+
+function renderTable(type) {
+  const container = document.getElementById('table-'+type);
+  if(!container) return;
+  const tc = container.closest('.table-container');
+  const search = ((tc.querySelector('.search-input')||{}).value||'').toLowerCase();
+  let rows = [...(dados[type]||[])];
+  tc.querySelectorAll('.filter-row select').forEach(sel=>{ if(sel.value) rows=rows.filter(r=>Object.values(r).some(v=>String(v)===sel.value)); });
+  if(search) rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(search)));
+
+  const c = cols[type];
+  if(!rows.length){ container.innerHTML='<div class="empty-state"><p>Nenhum registro encontrado.</p></div>'; return; }
+
+  const statusMap={'Pendente':'badge-amber','Concluído':'badge-green','Concluída':'badge-green','Vencido':'badge-gray','Agendada':'badge-blue','Agendado':'badge-blue','Ativo':'badge-green','Em andamento':'badge-blue','Realizado':'badge-green','Arquivado':'badge-gray','Cancelada':'badge-gray','Cancelado':'badge-gray','Suspenso':'badge-amber','Extinto':'badge-gray'};
+  const prioMap={'Alta':'badge-red','Média':'badge-amber','Baixa':'badge-gray'};
+
+  const headers = [...c,{k:'_a',l:'Ações'}].map(col=>'<th>'+col.l+'</th>').join('');
+  const body = rows.map(row=>{
+    const cells = c.map(col=>{
+      const v = row[col.k]||'—';
+      if(['vencimento','data','prazo'].includes(col.k)&&row[col.k]) return '<td>'+fmtDate(row[col.k])+'</td>';
+      if(col.k==='status') return '<td><span class="badge '+(statusMap[v]||'badge-gray')+'">'+v+'</span></td>';
+      if(col.k==='prioridade') return '<td><span class="badge '+(prioMap[v]||'badge-gray')+'">'+v+'</span></td>';
+      if(col.k==='tribunal'||col.k==='area') return '<td><span class="badge badge-blue">'+v+'</span></td>';
+      if(col.k==='observacao') return '<td style="font-size:11.5px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+v+'">'+v+'</td>';
+      return '<td>'+v+'</td>';
+    }).join('');
+    const actions='<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')">🗑</button></div></td>';
+    const urg = type==='prazos'&&row.status==='Pendente'&&diasRestantes(row.vencimento)<=2;
+    return '<tr class="'+(urg?'urgente':'')+'">'+cells+actions+'</tr>';
+  }).join('');
+  container.innerHTML='<table><thead><tr>'+headers+'</tr></thead><tbody>'+body+'</tbody></table>';
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+const modalForms = {
+  prazo:{title:'Novo Prazo',fields:[
+    {n:'descricao',l:'Descrição do Prazo',type:'text',full:true,req:true},
+    {n:'processo',l:'Nº do Processo',type:'text'},{n:'cliente',l:'Cliente/Parte',type:'text',req:true},
+    {n:'tribunal',l:'Tribunal',type:'select',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},
+    {n:'vencimento',l:'Vencimento',type:'date',req:true},
+    {n:'tipo',l:'Tipo',type:'select',opts:['Recursal','Processual','Extrajudicial','Judicial','Administrativo']},
+    {n:'status',l:'Status',type:'select',opts:['Pendente','Concluído','Vencido']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+  audiencia:{title:'Nova Audiência',fields:[
+    {n:'descricao',l:'Descrição',type:'text',full:true,req:true},
+    {n:'processo',l:'Nº do Processo',type:'text'},{n:'cliente',l:'Cliente/Parte',type:'text',req:true},
+    {n:'data',l:'Data',type:'date',req:true},{n:'hora',l:'Hora',type:'time'},
+    {n:'local',l:'Local/Vara',type:'text'},
+    {n:'tipo',l:'Tipo',type:'select',opts:['Instrução','Conciliação','Julgamento','Depoimento','Sustentação Oral','Outro']},
+    {n:'status',l:'Status',type:'select',opts:['Agendada','Realizado','Cancelada']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+  reuniao:{title:'Nova Reunião / Atendimento',fields:[
+    {n:'tipo',l:'Tipo',type:'select',opts:['Atendimento','Reunião','Consulta','Videoconferência']},
+    {n:'cliente',l:'Cliente/Parte',type:'text',req:true},
+    {n:'data',l:'Data',type:'date',req:true},{n:'hora',l:'Hora',type:'time'},
+    {n:'local',l:'Local',type:'text'},
+    {n:'assunto',l:'Assunto/Pauta',type:'text',full:true,req:true},
+    {n:'status',l:'Status',type:'select',opts:['Agendado','Realizado','Cancelado']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+  processo:{title:'Novo Processo',fields:[
+    {n:'numero',l:'Nº do Processo (CNJ)',type:'text',full:true,req:true},
+    {n:'cliente',l:'Cliente/Parte',type:'text',req:true},
+    {n:'polo',l:'Polo',type:'select',opts:['Ativo','Passivo','Terceiro Interessado']},
+    {n:'area',l:'Área',type:'select',opts:['Cível','Trabalhista','Consumidor','Família','Imobiliário','Previdenciário','Administrativo','Criminal']},
+    {n:'tribunal',l:'Tribunal',type:'select',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},
+    {n:'vara',l:'Vara/Juízo',type:'text'},
+    {n:'fase',l:'Fase',type:'select',opts:['Conhecimento','Recursal','Execução','Arquivado']},
+    {n:'status',l:'Status',type:'select',opts:['Ativo','Suspenso','Arquivado','Extinto']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+  tarefa:{title:'Nova Tarefa',fields:[
+    {n:'descricao',l:'Descrição da Tarefa',type:'text',full:true,req:true},
+    {n:'processo',l:'Nº do Processo (se houver)',type:'text'},{n:'cliente',l:'Cliente',type:'text'},
+    {n:'prazo',l:'Prazo',type:'date'},
+    {n:'prioridade',l:'Prioridade',type:'select',opts:['Alta','Média','Baixa']},
+    {n:'status',l:'Status',type:'select',opts:['Pendente','Em andamento','Concluída']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+};
+
+const typeToKey={prazo:'prazos',prazos:'prazos',audiencia:'audiencias',audiencias:'audiencias',reuniao:'reunioes',reunioes:'reunioes',processo:'processos',processos:'processos',tarefa:'tarefas',tarefas:'tarefas'};
+const keyToModal={prazos:'prazo',audiencias:'audiencia',reunioes:'reuniao',processos:'processo',tarefas:'tarefa'};
+let currentModalType = null;
+
+function openModal(type) {
+  currentModalType = type; editingId = null;
+  const cfg = modalForms[type];
+  document.getElementById('modal-title').textContent = cfg.title;
+  document.getElementById('modal-body').innerHTML = buildForm(cfg.fields, {});
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openEdit(type, id) {
+  const key = typeToKey[type];
+  const modalType = keyToModal[key]||type;
+  currentModalType = modalType; editingId = id;
+  const item = dados[key] && dados[key].find(r=>r.id===id);
+  if(!item) return;
+  const cfg = modalForms[modalType];
+  document.getElementById('modal-title').textContent = 'Editar — '+cfg.title.replace('Novo ','').replace('Nova ','');
+  document.getElementById('modal-body').innerHTML = buildForm(cfg.fields, item);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function buildForm(fields, data) {
+  return '<div class="form-grid">'+fields.map(f=>{
+    const ctrl = f.type==='select'
+      ? '<select class="form-control" name="'+f.n+'">'+f.opts.map(o=>'<option'+(data[f.n]===o?' selected':'')+'>'+o+'</option>').join('')+'</select>'
+      : f.type==='textarea'
+      ? '<textarea class="form-control" name="'+f.n+'">'+(data[f.n]||'')+'</textarea>'
+      : '<input class="form-control" type="'+f.type+'" name="'+f.n+'" value="'+(data[f.n]||'')+'">';
+    return '<div class="form-group'+(f.full?' full':'')+'"><label class="form-label">'+f.l+(f.req?' *':'')+'</label>'+ctrl+'</div>';
+  }).join('')+'</div>';
+}
+
+function saveItem() {
+  const obj={};
+  document.getElementById('modal-body').querySelectorAll('[name]').forEach(el=>{ obj[el.name]=el.value.trim(); });
+  const key = typeToKey[currentModalType];
+  if(editingId) {
+    const idx = dados[key].findIndex(r=>r.id===editingId);
+    if(idx>=0) dados[key][idx]={...dados[key][idx],...obj};
+  } else {
+    const maxId = dados[key].length ? Math.max(...dados[key].map(r=>r.id)) : 0;
+    dados[key].push({id:maxId+1,...obj});
+  }
+  saveData(); closeModal(); renderTable(key); renderDashboard();
+}
+
+function deleteItem(type, id) {
+  if(!confirm('Remover este registro?')) return;
+  const key = typeToKey[type]||type;
+  dados[key]=dados[key].filter(r=>r.id!==id);
+  saveData(); renderTable(key); renderDashboard();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+// ============================================================
+// EXCEL
+// ============================================================
+function exportarExcel() {
+  const wb = XLSX.utils.book_new();
+  [{name:'Prazos',data:dados.prazos,cols:['descricao','processo','cliente','tribunal','vencimento','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Tribunal','Vencimento','Tipo','Status','Observações']},
+   {name:'Audiências',data:dados.audiencias,cols:['descricao','processo','cliente','data','hora','local','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Data','Hora','Local','Tipo','Status','Observações']},
+   {name:'Reuniões',data:dados.reunioes,cols:['tipo','cliente','data','hora','local','assunto','status','observacao'],headers:['Tipo','Cliente','Data','Hora','Local','Assunto','Status','Observações']},
+   {name:'Processos',data:dados.processos,cols:['numero','cliente','polo','area','tribunal','vara','fase','status','observacao'],headers:['Nº Processo','Cliente','Polo','Área','Tribunal','Vara/Juízo','Fase','Status','Observações']},
+   {name:'Tarefas',data:dados.tarefas,cols:['descricao','processo','cliente','prazo','prioridade','status','observacao'],headers:['Tarefa','Nº Processo','Cliente','Prazo','Prioridade','Status','Observações']},
+  ].forEach(s=>{
+    const rows=[s.headers,...s.data.map(r=>s.cols.map(c=>r[c]||''))];
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=s.headers.map((_,i)=>({wch:Math.max(s.headers[i].length,...s.data.map(r=>String(r[s.cols[i]]||'').length),12)}));
+    XLSX.utils.book_append_sheet(wb,ws,s.name);
+  });
+  const ws0=XLSX.utils.aoa_to_sheet([['GESTÃO JURÍDICA — TARCÍSIO FREIRE ADVOCACIA'],['Gerado em:',new Date().toLocaleDateString('pt-BR')],[],['Módulo','Total','Pendentes'],['Prazos',dados.prazos.length,dados.prazos.filter(p=>p.status==='Pendente').length],['Audiências',dados.audiencias.length,dados.audiencias.filter(a=>a.status==='Agendada').length],['Reuniões',dados.reunioes.length,dados.reunioes.filter(r=>r.status==='Agendado').length],['Processos',dados.processos.length,dados.processos.filter(p=>p.status==='Ativo').length],['Tarefas',dados.tarefas.length,dados.tarefas.filter(t=>t.status!=='Concluída').length]]);
+  ws0['!cols']=[{wch:35},{wch:10},{wch:15}];
+  XLSX.utils.book_append_sheet(wb,ws0,'Resumo');
+  XLSX.writeFile(wb,'gestao_juridica_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadLocal();
+  renderDashboard();
+  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const t = setInterval(()=>{
+    if(window.google && window.google.accounts) { clearInterval(t); initGoogle(); }
+  }, 300);
+}
+
+init();
+</script>
+</body>
+</html>
