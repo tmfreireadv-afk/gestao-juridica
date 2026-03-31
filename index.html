@@ -9,52 +9,61 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
-    --ink:#1a1a2e;--ink2:#16213e;--gold:#c9a84c;--gold-light:#e8c97a;
-    --cream:#f9f6ef;--cream2:#f2ede0;--green:#2e7d5e;--green-light:#e6f4ef;
-    --red:#b94040;--red-light:#fdf0f0;--blue:#2563a8;--blue-light:#eef4fc;
-    --amber:#c07a1a;--amber-light:#fdf4e6;--border:#d9d0bc;
+    --ink:#1a1a2e;--ink2:#1b3a5c;--sidebar-bg:#1e4976;
+    --gold:#c9a84c;--gold-light:#e8c97a;
+    --cream:#f9f6ef;--cream2:#f2ede0;
+    --green:#2e7d5e;--green-light:#e6f4ef;
+    --red:#b94040;--red-light:#fdf0f0;
+    --blue:#2563a8;--blue-light:#eef4fc;
+    --amber:#c07a1a;--amber-light:#fdf4e6;
+    --border:#d9d0bc;
     --shadow:0 2px 16px rgba(26,26,46,0.10);--radius:10px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
 
-  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--ink2);display:flex;flex-direction:column;z-index:100;border-right:2px solid rgba(201,168,76,0.25);}
-  .brand{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+  /* ── SIDEBAR ── */
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;border-right:2px solid rgba(201,168,76,0.3);}
+  .brand{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.12);}
   .brand-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:0.3px;line-height:1.3;}
-  .brand-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
+  .brand-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
   .nav{flex:1;padding:16px 0;overflow-y:auto;}
-  .nav-section{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:12px 20px 6px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13.5px;transition:all .15s;border-left:3px solid transparent;}
-  .nav-item:hover{color:#fff;background:rgba(255,255,255,0.05);}
-  .nav-item.active{color:var(--gold);background:rgba(201,168,76,0.1);border-left-color:var(--gold);}
-  .nav-item svg{width:16px;height:16px;flex-shrink:0;}
+  .nav-section{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:14px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#d0e8ff;font-size:13.5px;font-weight:500;transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:#fff;background:rgba(255,255,255,0.1);}
+  .nav-item.active{color:#fff;background:rgba(201,168,76,0.18);border-left-color:var(--gold);font-weight:600;}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+  .nav-item.active svg{opacity:1;}
   .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center;}
 
-  .drive-status{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.08);}
+  /* ── DRIVE ── */
+  .drive-status{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.1);}
   .drive-btn{width:100%;padding:9px 12px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .15s;}
   .drive-btn.conectar{background:var(--gold);color:var(--ink2);}
   .drive-btn.conectar:hover{background:var(--gold-light);}
-  .drive-btn.conectado{background:rgba(46,125,94,0.2);color:#6fcfa8;border:1px solid rgba(111,207,168,0.3);cursor:default;}
-  .drive-user{font-size:10.5px;color:rgba(255,255,255,0.35);margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drive-btn.conectado{background:rgba(46,125,94,0.25);color:#6fcfa8;border:1px solid rgba(111,207,168,0.3);cursor:default;}
+  .drive-user{font-size:10.5px;color:rgba(255,255,255,0.4);margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .drive-sync-row{display:flex;gap:6px;margin-top:6px;}
-  .drive-sync-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.5);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
-  .drive-sync-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
-  .drive-sync-btn.sair{color:rgba(185,64,64,0.7);border-color:rgba(185,64,64,0.2);}
-  .drive-sync-btn.sair:hover{background:rgba(185,64,64,0.15);color:var(--red);}
+  .drive-sync-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+  .drive-sync-btn:hover{background:rgba(255,255,255,0.14);color:#fff;}
+  .drive-sync-btn.sair{color:rgba(255,120,120,0.7);border-color:rgba(185,64,64,0.25);}
+  .drive-sync-btn.sair:hover{background:rgba(185,64,64,0.2);color:#ff9090;}
 
   .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
   .sync-dot.ok{background:#6fcfa8;}
   .sync-dot.saving{background:var(--gold);animation:pulse 1s infinite;}
   .sync-dot.error{background:var(--red);}
-  .sync-dot.offline{background:#555;}
+  .sync-dot.offline{background:#6a8fad;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
+  /* ── MAIN ── */
   .main{margin-left:240px;min-height:100vh;}
   .topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50;box-shadow:0 1px 6px rgba(0,0,0,0.04);}
   .topbar-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink);flex:1;}
   .topbar-date{font-size:12px;color:#888;}
   .content{padding:28px 32px;}
 
+  /* ── STATS ── */
   .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
   .stat-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
   .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
@@ -62,10 +71,16 @@
   .stat-card.audiencia::before{background:var(--blue);}
   .stat-card.tarefa::before{background:var(--amber);}
   .stat-card.processo::before{background:var(--green);}
+  .stat-card.receita::before{background:#2e7d5e;}
+  .stat-card.despesa::before{background:#b94040;}
+  .stat-card.saldo::before{background:#2563a8;}
   .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#888;font-weight:600;}
-  .stat-number{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--ink);line-height:1.1;margin:6px 0 4px;}
+  .stat-number{font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:var(--ink);line-height:1.1;margin:6px 0 4px;}
+  .stat-number.positivo{color:var(--green);}
+  .stat-number.negativo{color:var(--red);}
   .stat-sub{font-size:11.5px;color:#999;}
 
+  /* ── AGENDA ── */
   .agenda-hoje{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);margin-bottom:28px;}
   .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .section-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
@@ -77,8 +92,10 @@
   .agenda-desc{font-size:13.5px;font-weight:500;}
   .agenda-meta{font-size:11.5px;color:#999;margin-top:2px;}
 
+  /* ── VIEWS ── */
   .view{display:none;}.view.active{display:block;}
 
+  /* ── TABLE ── */
   .table-container{background:#fff;border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden;}
   .table-toolbar{padding:16px 20px;border-bottom:1px solid var(--cream2);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
   .search-input{flex:1;min-width:200px;padding:8px 14px;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--cream);color:var(--ink);outline:none;}
@@ -92,7 +109,7 @@
   .btn-danger{background:var(--red-light);color:var(--red);border:1px solid #f3c5c5;}.btn-danger:hover{background:var(--red);color:#fff;}
 
   table{width:100%;border-collapse:collapse;font-size:13px;}
-  thead th{text-align:left;padding:10px 16px;background:var(--cream2);color:#666;font-size:11px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
+  thead th{text-align:left;padding:10px 16px;background:var(--cream2);color:#555;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;border-bottom:1px solid var(--border);}
   tbody tr{border-bottom:1px solid var(--cream2);transition:background .1s;}
   tbody tr:hover{background:#fafaf7;}
   tbody tr:last-child{border-bottom:none;}
@@ -106,6 +123,28 @@
   .badge-gray{background:#f0f0f0;color:#666;}
   .urgente{background:#fff3f3;}
 
+  /* ── FINANCEIRO ── */
+  .fin-resumo{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+  .fin-card{background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+  .fin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .fin-card.r::before{background:var(--green);}
+  .fin-card.d::before{background:var(--red);}
+  .fin-card.s::before{background:var(--blue);}
+  .fin-card-label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:#888;font-weight:600;}
+  .fin-card-value{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin:6px 0 3px;line-height:1.1;}
+  .fin-card-value.pos{color:var(--green);}
+  .fin-card-value.neg{color:var(--red);}
+  .fin-card-value.neu{color:var(--blue);}
+  .fin-card-sub{font-size:11.5px;color:#999;}
+  .fin-tabs{display:flex;gap:0;margin-bottom:20px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:#fff;box-shadow:var(--shadow);}
+  .fin-tab{flex:1;padding:12px 20px;cursor:pointer;font-size:13.5px;font-weight:600;text-align:center;border:none;background:none;font-family:'DM Sans',sans-serif;color:#888;transition:all .15s;border-right:1px solid var(--border);}
+  .fin-tab:last-child{border-right:none;}
+  .fin-tab.active{background:var(--ink2);color:#fff;}
+  .fin-tab:hover:not(.active){background:var(--cream2);color:var(--ink);}
+  .valor-receita{color:var(--green);font-weight:600;}
+  .valor-despesa{color:var(--red);font-weight:600;}
+
+  /* ── MODAL ── */
   .modal-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,0.5);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
   .modal-overlay.open{display:flex;}
   .modal{background:#fff;border-radius:14px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,0.18);}
@@ -127,13 +166,11 @@
 
   .empty-state{text-align:center;padding:48px 20px;color:#bbb;}
   .empty-state p{font-size:13px;}
-
   .countdown{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;}
   .countdown.urgente{color:var(--red);}
   .countdown.atencao{color:var(--amber);}
   .countdown.ok{color:var(--green);}
   .countdown.vencido{color:#b0b0b0;text-decoration:line-through;}
-
   .actions{display:flex;gap:6px;}
   .filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 20px;border-bottom:1px solid var(--cream2);background:var(--cream);}
   .filter-row select{padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff;color:var(--ink);outline:none;cursor:pointer;}
@@ -145,7 +182,7 @@
   .toast.error{border-left:4px solid var(--red);}
   .toast.info{border-left:4px solid var(--gold);}
 
-  @media(max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr);}.form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}}
+  @media(max-width:900px){.stats-grid,.fin-resumo{grid-template-columns:repeat(2,1fr);}.form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}}
   @media(max-width:700px){.sidebar{width:200px;}.main{margin-left:200px;}.content{padding:16px;}.topbar{padding:12px 16px;}}
 </style>
 </head>
@@ -183,6 +220,11 @@
     <div class="nav-item" onclick="showView('tarefas',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       Tarefas <span class="nav-badge" id="badge-tarefas">0</span>
+    </div>
+    <div class="nav-section">Financeiro</div>
+    <div class="nav-item" onclick="showView('financeiro',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financeiro
     </div>
   </nav>
   <div class="drive-status">
@@ -225,12 +267,21 @@
   </div>
 
   <div class="content">
+
+    <!-- DASHBOARD -->
     <div id="view-dashboard" class="view active">
       <div class="stats-grid">
         <div class="stat-card prazo"><div class="stat-label">Prazos Ativos</div><div class="stat-number" id="stat-prazos">0</div><div class="stat-sub" id="stat-prazos-sub">–</div></div>
         <div class="stat-card audiencia"><div class="stat-label">Audiências</div><div class="stat-number" id="stat-audiencias">0</div><div class="stat-sub" id="stat-aud-sub">–</div></div>
         <div class="stat-card tarefa"><div class="stat-label">Tarefas Pendentes</div><div class="stat-number" id="stat-tarefas">0</div><div class="stat-sub" id="stat-tar-sub">–</div></div>
-        <div class="stat-card processo"><div class="stat-label">Processos</div><div class="stat-number" id="stat-processos">0</div><div class="stat-sub" id="stat-proc-sub">–</div></div>
+        <div class="stat-card processo"><div class="stat-label">Processos Ativos</div><div class="stat-number" id="stat-processos">0</div><div class="stat-sub" id="stat-proc-sub">–</div></div>
+      </div>
+      <!-- Financeiro resumo no dashboard -->
+      <div class="stats-grid" style="margin-bottom:28px;">
+        <div class="stat-card receita"><div class="stat-label">Receitas (mês)</div><div class="stat-number positivo" id="dash-receita-mes">R$ 0</div><div class="stat-sub" id="dash-receita-sub">–</div></div>
+        <div class="stat-card despesa"><div class="stat-label">Despesas (mês)</div><div class="stat-number negativo" id="dash-despesa-mes">R$ 0</div><div class="stat-sub" id="dash-despesa-sub">–</div></div>
+        <div class="stat-card saldo"><div class="stat-label">Saldo (mês)</div><div class="stat-number" id="dash-saldo-mes">R$ 0</div><div class="stat-sub">receitas − despesas</div></div>
+        <div class="stat-card saldo"><div class="stat-label">A Receber</div><div class="stat-number" id="dash-a-receber">R$ 0</div><div class="stat-sub">honorários pendentes</div></div>
       </div>
       <div class="agenda-hoje">
         <div class="section-header">
@@ -252,6 +303,7 @@
       </div>
     </div>
 
+    <!-- PRAZOS -->
     <div id="view-prazos" class="view">
       <div class="table-container">
         <div class="table-toolbar">
@@ -268,6 +320,7 @@
       </div>
     </div>
 
+    <!-- AUDIÊNCIAS -->
     <div id="view-audiencias" class="view">
       <div class="table-container">
         <div class="table-toolbar">
@@ -278,6 +331,7 @@
       </div>
     </div>
 
+    <!-- REUNIÕES -->
     <div id="view-reunioes" class="view">
       <div class="table-container">
         <div class="table-toolbar">
@@ -288,6 +342,7 @@
       </div>
     </div>
 
+    <!-- PROCESSOS -->
     <div id="view-processos" class="view">
       <div class="table-container">
         <div class="table-toolbar">
@@ -304,6 +359,7 @@
       </div>
     </div>
 
+    <!-- TAREFAS -->
     <div id="view-tarefas" class="view">
       <div class="table-container">
         <div class="table-toolbar">
@@ -319,9 +375,73 @@
         <div id="table-tarefas"></div>
       </div>
     </div>
-  </div>
+
+    <!-- FINANCEIRO -->
+    <div id="view-financeiro" class="view">
+      <div class="fin-resumo">
+        <div class="fin-card r">
+          <div class="fin-card-label">Total Receitas</div>
+          <div class="fin-card-value pos" id="fin-total-receitas">R$ 0,00</div>
+          <div class="fin-card-sub" id="fin-receitas-count">0 lançamentos</div>
+        </div>
+        <div class="fin-card d">
+          <div class="fin-card-label">Total Despesas</div>
+          <div class="fin-card-value neg" id="fin-total-despesas">R$ 0,00</div>
+          <div class="fin-card-sub" id="fin-despesas-count">0 lançamentos</div>
+        </div>
+        <div class="fin-card s">
+          <div class="fin-card-label">Saldo Geral</div>
+          <div class="fin-card-value neu" id="fin-saldo">R$ 0,00</div>
+          <div class="fin-card-sub" id="fin-saldo-sub">receitas − despesas</div>
+        </div>
+      </div>
+
+      <div class="fin-tabs">
+        <button class="fin-tab active" id="tab-receitas" onclick="switchFinTab('receitas')">
+          💰 Receitas / Honorários
+        </button>
+        <button class="fin-tab" id="tab-despesas" onclick="switchFinTab('despesas')">
+          💸 Despesas
+        </button>
+      </div>
+
+      <div id="fin-view-receitas">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <input class="search-input" placeholder="Buscar receita, cliente, processo…" oninput="renderTable('receitas')">
+            <button class="btn btn-primary" onclick="openModal('receita')">+ Nova Receita</button>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label">Status:</span>
+            <select onchange="renderTable('receitas')"><option value="">Todos</option><option>Recebido</option><option>Pendente</option><option>Parcial</option><option>Inadimplente</option></select>
+            <span class="filter-label">Tipo:</span>
+            <select onchange="renderTable('receitas')"><option value="">Todos</option><option>Honorários Contratuais</option><option>Honorários Êxito</option><option>Consulta</option><option>Elaboração de Documento</option><option>Outros</option></select>
+          </div>
+          <div id="table-receitas"></div>
+        </div>
+      </div>
+
+      <div id="fin-view-despesas" style="display:none">
+        <div class="table-container">
+          <div class="table-toolbar">
+            <input class="search-input" placeholder="Buscar despesa, fornecedor…" oninput="renderTable('despesas')">
+            <button class="btn btn-primary" onclick="openModal('despesa')">+ Nova Despesa</button>
+          </div>
+          <div class="filter-row">
+            <span class="filter-label">Categoria:</span>
+            <select onchange="renderTable('despesas')"><option value="">Todas</option><option>Aluguel</option><option>Pessoal</option><option>Custas Processuais</option><option>Marketing</option><option>TI / Software</option><option>Telefone / Internet</option><option>Materiais</option><option>Outros</option></select>
+            <span class="filter-label">Status:</span>
+            <select onchange="renderTable('despesas')"><option value="">Todos</option><option>Pago</option><option>Pendente</option><option>Vencido</option></select>
+          </div>
+          <div id="table-despesas"></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
 </main>
 
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -340,70 +460,72 @@
 
 <script>
 // ============================================================
-// GOOGLE DRIVE CONFIG
+// GOOGLE DRIVE
 // ============================================================
 const CLIENT_ID = '930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
 const DRIVE_FILE_NAME = 'gestao_juridica_dados.json';
-
-let tokenClient = null;
-let accessToken = null;
-let driveFileId = null;
-let userEmail = '';
-let syncTimeout = null;
+let tokenClient=null, accessToken=null, driveFileId=null, userEmail='', syncTimeout=null;
 
 // ============================================================
 // DADOS
 // ============================================================
-let dados = { prazos:[], audiencias:[], reunioes:[], processos:[], tarefas:[] };
+let dados = { prazos:[], audiencias:[], reunioes:[], processos:[], tarefas:[], receitas:[], despesas:[] };
 let editingId = null;
 
 function hoje() { return new Date().toISOString().split('T')[0]; }
+function mesAtual() { const d=new Date(); return d.getFullYear()+'-'+(String(d.getMonth()+1).padStart(2,'0')); }
 
 function loadLocal() {
   try {
     const s = localStorage.getItem('gestao_juridica_v3');
-    if (s) dados = JSON.parse(s);
+    if(s){ const p=JSON.parse(s); dados={...dados,...p}; if(!dados.receitas) dados.receitas=[]; if(!dados.despesas) dados.despesas=[]; }
     const meta = localStorage.getItem('gestao_juridica_meta');
-    if (meta) { const m = JSON.parse(meta); driveFileId = m.fileId||null; userEmail = m.email||''; }
-  } catch(e) {}
-  if (!dados.prazos.length && !dados.processos.length) seedData();
+    if(meta){ const m=JSON.parse(meta); driveFileId=m.fileId||null; userEmail=m.email||''; }
+  } catch(e){}
+  if(!dados.prazos.length && !dados.processos.length) seedData();
 }
 
-function saveLocal() {
-  localStorage.setItem('gestao_juridica_v3', JSON.stringify(dados));
-}
+function saveLocal() { localStorage.setItem('gestao_juridica_v3', JSON.stringify(dados)); }
 
 function saveData() {
   saveLocal();
-  if (accessToken) {
-    clearTimeout(syncTimeout);
-    setSyncStatus('saving','Salvando…');
-    syncTimeout = setTimeout(() => syncDrive('upload', true), 1500);
-  }
+  if(accessToken){ clearTimeout(syncTimeout); setSyncStatus('saving','Salvando…'); syncTimeout=setTimeout(()=>syncDrive('upload',true),1500); }
+}
+
+function fmtBRL(v) {
+  const n = parseFloat(v)||0;
+  return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
 function seedData() {
-  function fmt(d) { const dt = new Date(); dt.setDate(dt.getDate()+d); return dt.toISOString().split('T')[0]; }
-  dados.processos = [
+  function fmt(d){ const dt=new Date(); dt.setDate(dt.getDate()+d); return dt.toISOString().split('T')[0]; }
+  const m = mesAtual();
+  dados.processos=[
     {id:1,numero:'0009147-43.2010.8.05.0274',cliente:'Najara Alves Pereira',polo:'Ativo',area:'Cível',tribunal:'TJ-BA',vara:'5ª Vara Cível',fase:'Recursal',status:'Ativo',observacao:'Recurso Especial – gratuidade judiciária'},
     {id:2,numero:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',polo:'Passivo',area:'Trabalhista',tribunal:'TRT-5',vara:'2ª Vara do Trabalho',fase:'Execução',status:'Ativo',observacao:'Impugnação cálculos liquidação'},
     {id:3,numero:'8004720-35.2024.8.05.0124',cliente:'Ricardo Silva Araújo',polo:'Ativo',area:'Consumidor',tribunal:'JEC',vara:'JEC Vitória da Conquista',fase:'Conhecimento',status:'Ativo',observacao:'Embargos de declaração'},
   ];
-  dados.prazos = [
+  dados.prazos=[
     {id:1,descricao:'Contrarrazões apelação',processo:'0009147-43.2010.8.05.0274',cliente:'Najara Alves Pereira',tribunal:'STJ',vencimento:fmt(3),tipo:'Recursal',status:'Pendente',observacao:''},
     {id:2,descricao:'Impugnação cálculos',processo:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',tribunal:'TRT-5',vencimento:fmt(7),tipo:'Processual',status:'Pendente',observacao:''},
     {id:3,descricao:'Embargos de declaração',processo:'8004720-35.2024.8.05.0124',cliente:'Ricardo Silva Araújo',tribunal:'JEC',vencimento:fmt(1),tipo:'Recursal',status:'Pendente',observacao:''},
   ];
-  dados.audiencias = [
-    {id:1,descricao:'Audiência de instrução',processo:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',data:fmt(5),hora:'09:00',local:'2ª VT – Vitória da Conquista',tipo:'Instrução',status:'Agendada',observacao:''},
-  ];
-  dados.reunioes = [
-    {id:1,tipo:'Atendimento',cliente:'Raquel Formigli Rebouças Martins',data:fmt(2),hora:'14:00',local:'Escritório',assunto:'Inventário – Toledo & Toledo',status:'Agendado',observacao:'Levar documentos do espólio'},
-  ];
-  dados.tarefas = [
+  dados.audiencias=[{id:1,descricao:'Audiência de instrução',processo:'0000514-86.2026.5.05.0612',cliente:'UNIONCOOP',data:fmt(5),hora:'09:00',local:'2ª VT – Vitória da Conquista',tipo:'Instrução',status:'Agendada',observacao:''}];
+  dados.reunioes=[{id:1,tipo:'Atendimento',cliente:'Raquel Formigli Rebouças Martins',data:fmt(2),hora:'14:00',local:'Escritório',assunto:'Inventário – Toledo & Toledo',status:'Agendado',observacao:''}];
+  dados.tarefas=[
     {id:1,descricao:'Verificar publicações PROJURIS',processo:'',cliente:'',prazo:hoje(),prioridade:'Alta',status:'Pendente',observacao:''},
     {id:2,descricao:'Petição inicial – usucapião Fazenda Caratinga',processo:'8000732-46.2022.8.05.0198',cliente:'Paulo Ivo de Oliveira',prazo:fmt(10),prioridade:'Média',status:'Pendente',observacao:''},
+  ];
+  dados.receitas=[
+    {id:1,descricao:'Honorários contratuais – UNIONCOOP',cliente:'UNIONCOOP',processo:'0000514-86.2026.5.05.0612',valor:'3500.00',data:m+'-05',tipo:'Honorários Contratuais',status:'Recebido',observacao:'Parcela jan/2026'},
+    {id:2,descricao:'Consulta jurídica',cliente:'Paulo Ivo de Oliveira',processo:'',valor:'400.00',data:m+'-10',tipo:'Consulta',status:'Recebido',observacao:''},
+    {id:3,descricao:'Honorários – Recurso Especial',cliente:'Najara Alves Pereira',processo:'0009147-43.2010.8.05.0274',valor:'2800.00',data:m+'-15',tipo:'Honorários Contratuais',status:'Pendente',observacao:'Aguardando depósito'},
+  ];
+  dados.despesas=[
+    {id:1,descricao:'Aluguel sala escritório',fornecedor:'Imobiliária Central',valor:'1800.00',data:m+'-05',categoria:'Aluguel',status:'Pago',observacao:''},
+    {id:2,descricao:'Assinatura PROJURIS ADV',fornecedor:'Projuris',valor:'189.00',data:m+'-10',categoria:'TI / Software',status:'Pago',observacao:''},
+    {id:3,descricao:'Custas – distribuição ação',fornecedor:'TJ-BA',valor:'320.00',data:m+'-18',categoria:'Custas Processuais',status:'Pendente',observacao:'Proc. Najara'},
   ];
   saveLocal();
 }
@@ -413,178 +535,149 @@ function seedData() {
 // ============================================================
 function initGoogle() {
   tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
+    client_id: CLIENT_ID, scope: SCOPES,
     callback: async (resp) => {
-      if (resp.error) { toast('Erro ao autenticar: ' + resp.error, 'error'); return; }
+      if(resp.error){ toast('Erro: '+resp.error,'error'); return; }
       accessToken = resp.access_token;
       await fetchUserInfo();
       updateDriveUI(true);
       setSyncStatus('ok','Drive conectado');
-      toast('Google Drive conectado!', 'success');
-      await syncDrive('download', true);
+      toast('Google Drive conectado!','success');
+      await syncDrive('download',true);
     }
   });
 }
 
 async function fetchUserInfo() {
   try {
-    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{ Authorization:'Bearer '+accessToken } });
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}});
     const u = await r.json();
-    userEmail = u.email || '';
+    userEmail = u.email||'';
     document.getElementById('drive-user').textContent = userEmail;
-    localStorage.setItem('gestao_juridica_meta', JSON.stringify({fileId:driveFileId, email:userEmail}));
-  } catch(e) {}
+    localStorage.setItem('gestao_juridica_meta',JSON.stringify({fileId:driveFileId,email:userEmail}));
+  } catch(e){}
 }
 
-function loginGoogle() {
-  if (!tokenClient) { toast('API Google carregando, aguarde…','info'); return; }
-  tokenClient.requestAccessToken();
-}
+function loginGoogle(){ if(!tokenClient){toast('Aguarde…','info');return;} tokenClient.requestAccessToken(); }
 
 function logoutGoogle() {
-  if (accessToken) google.accounts.oauth2.revoke(accessToken, ()=>{});
-  accessToken = null; driveFileId = null; userEmail = '';
+  if(accessToken) google.accounts.oauth2.revoke(accessToken,()=>{});
+  accessToken=null; driveFileId=null; userEmail='';
   localStorage.removeItem('gestao_juridica_meta');
-  updateDriveUI(false);
-  setSyncStatus('offline','Offline');
-  toast('Desconectado do Google Drive.','info');
+  updateDriveUI(false); setSyncStatus('offline','Offline');
+  toast('Desconectado.','info');
 }
 
-function updateDriveUI(conectado) {
-  const btn = document.getElementById('drive-btn');
-  const userEl = document.getElementById('drive-user');
-  const syncRow = document.getElementById('drive-sync-row');
-  if (conectado) {
-    btn.className = 'drive-btn conectado';
-    btn.innerHTML = '<span class="sync-dot ok"></span> Drive Conectado';
-    btn.onclick = null;
-    userEl.style.display = 'block';
-    userEl.textContent = userEmail;
-    syncRow.style.display = 'flex';
-  } else {
-    btn.className = 'drive-btn conectar';
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Conectar Google Drive';
-    btn.onclick = loginGoogle;
-    userEl.style.display = 'none';
-    syncRow.style.display = 'none';
-  }
+function updateDriveUI(c) {
+  const btn=document.getElementById('drive-btn'), uel=document.getElementById('drive-user'), sr=document.getElementById('drive-sync-row');
+  if(c){ btn.className='drive-btn conectado'; btn.innerHTML='<span class="sync-dot ok"></span> Drive Conectado'; btn.onclick=null; uel.style.display='block'; sr.style.display='flex'; }
+  else { btn.className='drive-btn conectar'; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Conectar Google Drive'; btn.onclick=loginGoogle; uel.style.display='none'; sr.style.display='none'; }
 }
 
-function setSyncStatus(state, label) {
-  document.getElementById('sync-dot').className = 'sync-dot ' + state;
-  document.getElementById('sync-label').textContent = label;
-}
+function setSyncStatus(s,l){ document.getElementById('sync-dot').className='sync-dot '+s; document.getElementById('sync-label').textContent=l; }
 
 // ============================================================
-// GOOGLE DRIVE SYNC
+// DRIVE SYNC
 // ============================================================
 async function findOrCreateFile() {
-  const q = encodeURIComponent("name='" + DRIVE_FILE_NAME + "' and trashed=false");
-  const r = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id)', {
-    headers:{ Authorization:'Bearer '+accessToken }
-  });
-  const data = await r.json();
-  if (data.files && data.files.length > 0) {
-    driveFileId = data.files[0].id;
-  } else {
-    const cr = await fetch('https://www.googleapis.com/drive/v3/files', {
-      method:'POST',
-      headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'application/json' },
-      body: JSON.stringify({ name: DRIVE_FILE_NAME, parents: ['appDataFolder'] })
-    });
-    const f = await cr.json();
-    driveFileId = f.id;
+  const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+  const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id)',{headers:{Authorization:'Bearer '+accessToken}});
+  const d=await r.json();
+  if(d.files&&d.files.length>0){ driveFileId=d.files[0].id; }
+  else {
+    const cr=await fetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:DRIVE_FILE_NAME,parents:['appDataFolder']})});
+    driveFileId=(await cr.json()).id;
   }
-  localStorage.setItem('gestao_juridica_meta', JSON.stringify({fileId:driveFileId, email:userEmail}));
+  localStorage.setItem('gestao_juridica_meta',JSON.stringify({fileId:driveFileId,email:userEmail}));
 }
 
-async function syncDrive(direction, silent=false) {
-  if (!accessToken) { if(!silent) toast('Conecte o Google Drive primeiro.','info'); return; }
-  setSyncStatus('saving', direction==='upload' ? 'Salvando…' : 'Carregando…');
+async function syncDrive(dir,silent=false) {
+  if(!accessToken){if(!silent)toast('Conecte o Google Drive primeiro.','info');return;}
+  setSyncStatus('saving',dir==='upload'?'Salvando…':'Carregando…');
   try {
-    if (!driveFileId) await findOrCreateFile();
-
-    if (direction === 'upload') {
-      const boundary = 'frontier314159';
-      const meta = JSON.stringify({ name: DRIVE_FILE_NAME });
-      const content = JSON.stringify(dados);
-      const body = '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n--'+boundary+'--';
-      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=multipart', {
-        method:'PATCH',
-        headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'multipart/related; boundary="'+boundary+'"' },
-        body
-      });
+    if(!driveFileId) await findOrCreateFile();
+    if(dir==='upload'){
+      const b='frontier314';
+      const body='--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{}\r\n--'+b+'\r\nContent-Type: application/json\r\n\r\n'+JSON.stringify(dados)+'\r\n--'+b+'--';
+      await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=multipart',{method:'PATCH',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'multipart/related; boundary="'+b+'"'},body});
       setSyncStatus('ok','Salvo no Drive');
-      if(!silent) toast('Dados salvos no Google Drive ✓','success');
-
+      if(!silent) toast('Dados salvos no Drive ✓','success');
     } else {
-      const r = await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media', {
-        headers:{ Authorization:'Bearer '+accessToken }
-      });
-      if (r.ok) {
-        const text = await r.text();
-        if (text && text.trim().startsWith('{')) {
-          dados = JSON.parse(text);
-          saveLocal();
-          renderDashboard();
-          setSyncStatus('ok','Carregado do Drive');
-          if(!silent) toast('Dados carregados do Google Drive ✓','success');
-        } else {
-          await syncDrive('upload', true);
-        }
-      } else {
-        setSyncStatus('error','Erro no Drive');
-        if(!silent) toast('Erro ao carregar dados.','error');
-      }
+      const r=await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media',{headers:{Authorization:'Bearer '+accessToken}});
+      if(r.ok){
+        const t=await r.text();
+        if(t&&t.trim().startsWith('{')){
+          const parsed=JSON.parse(t);
+          dados={prazos:[],audiencias:[],reunioes:[],processos:[],tarefas:[],receitas:[],despesas:[],...parsed};
+          saveLocal(); renderDashboard(); setSyncStatus('ok','Carregado do Drive');
+          if(!silent) toast('Dados carregados do Drive ✓','success');
+        } else { await syncDrive('upload',true); }
+      } else { setSyncStatus('error','Erro'); if(!silent) toast('Erro ao carregar.','error'); }
     }
-  } catch(e) {
-    setSyncStatus('error','Erro');
-    if(!silent) toast('Erro: '+e.message,'error');
-  }
+  } catch(e){ setSyncStatus('error','Erro'); if(!silent) toast('Erro: '+e.message,'error'); }
 }
 
 // ============================================================
 // TOAST
 // ============================================================
 let toastTimer;
-function toast(msg, type='info') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast '+type+' show';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
-}
+function toast(msg,type='info'){ const el=document.getElementById('toast'); el.textContent=msg; el.className='toast '+type+' show'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),3500); }
 
 // ============================================================
 // NAVIGATION
 // ============================================================
-const titles = {dashboard:'Dashboard',prazos:'Prazos Processuais',audiencias:'Audiências',reunioes:'Reuniões & Atendimentos',processos:'Processos',tarefas:'Tarefas'};
+const titles={dashboard:'Dashboard',prazos:'Prazos Processuais',audiencias:'Audiências',reunioes:'Reuniões & Atendimentos',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro'};
 
-function showView(name, el) {
+function showView(name,el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   if(el) el.classList.add('active');
   document.getElementById('page-title').textContent = titles[name];
-  name !== 'dashboard' ? renderTable(name) : renderDashboard();
+  if(name==='dashboard') renderDashboard();
+  else if(name==='financeiro') renderFinanceiro();
+  else renderTable(name);
+}
+
+// ============================================================
+// FINANCEIRO
+// ============================================================
+let finTabAtiva = 'receitas';
+
+function switchFinTab(tab) {
+  finTabAtiva = tab;
+  document.getElementById('tab-receitas').classList.toggle('active', tab==='receitas');
+  document.getElementById('tab-despesas').classList.toggle('active', tab==='despesas');
+  document.getElementById('fin-view-receitas').style.display = tab==='receitas' ? '' : 'none';
+  document.getElementById('fin-view-despesas').style.display = tab==='despesas' ? '' : 'none';
+  renderTable(tab);
+}
+
+function renderFinanceiro() {
+  const totalR = dados.receitas.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+  const totalD = dados.despesas.reduce((s,d)=>s+(parseFloat(d.valor)||0),0);
+  const saldo = totalR - totalD;
+  const aReceber = dados.receitas.filter(r=>r.status==='Pendente'||r.status==='Parcial').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+
+  document.getElementById('fin-total-receitas').textContent = fmtBRL(totalR);
+  document.getElementById('fin-receitas-count').textContent = dados.receitas.length+' lançamentos';
+  document.getElementById('fin-total-despesas').textContent = fmtBRL(totalD);
+  document.getElementById('fin-despesas-count').textContent = dados.despesas.length+' lançamentos';
+  document.getElementById('fin-saldo').textContent = fmtBRL(saldo);
+  document.getElementById('fin-saldo').className = 'fin-card-value '+(saldo>=0?'pos':'neg');
+  document.getElementById('fin-saldo-sub').textContent = saldo>=0 ? 'resultado positivo' : 'resultado negativo';
+
+  renderTable(finTabAtiva);
 }
 
 // ============================================================
 // HELPERS
 // ============================================================
-function diasRestantes(v) {
-  const h = new Date(); h.setHours(0,0,0,0);
-  return Math.round((new Date(v+'T00:00:00') - h) / 86400000);
-}
-function fmtDate(d) {
-  if(!d) return '—';
-  const [y,m,dd] = d.split('-');
-  return dd+'/'+m+'/'+y;
-}
-function countdownBadge(venc, status) {
+function diasRestantes(v){ const h=new Date(); h.setHours(0,0,0,0); return Math.round((new Date(v+'T00:00:00')-h)/86400000); }
+function fmtDate(d){ if(!d) return '—'; const [y,m,dd]=d.split('-'); return dd+'/'+m+'/'+y; }
+function countdownBadge(venc,status){
   if(status==='Concluído'||status==='Realizado') return '<span class="badge badge-green">'+status+'</span>';
-  const d = diasRestantes(venc);
+  const d=diasRestantes(venc);
   if(d<0) return '<span class="countdown vencido">Vencido '+Math.abs(d)+'d</span>';
   if(d===0) return '<span class="countdown urgente">⚠ Hoje!</span>';
   if(d<=3) return '<span class="countdown urgente">⚠ '+d+'d</span>';
@@ -596,89 +689,120 @@ function countdownBadge(venc, status) {
 // DASHBOARD
 // ============================================================
 function renderDashboard() {
-  const pend = dados.prazos.filter(p=>p.status==='Pendente');
-  const aud = dados.audiencias.filter(a=>a.status==='Agendada');
-  const tar = dados.tarefas.filter(t=>t.status!=='Concluída');
-  const proc = dados.processos.filter(p=>p.status==='Ativo');
+  const pend=dados.prazos.filter(p=>p.status==='Pendente');
+  const aud=dados.audiencias.filter(a=>a.status==='Agendada');
+  const tar=dados.tarefas.filter(t=>t.status!=='Concluída');
+  const proc=dados.processos.filter(p=>p.status==='Ativo');
 
-  document.getElementById('stat-prazos').textContent = pend.length;
-  document.getElementById('stat-prazos-sub').textContent = pend.filter(p=>diasRestantes(p.vencimento)<=3).length+' críticos (≤3 dias)';
-  document.getElementById('stat-audiencias').textContent = aud.length;
-  document.getElementById('stat-aud-sub').textContent = aud.length ? 'próxima: '+fmtDate([...aud].sort((a,b)=>a.data.localeCompare(b.data))[0].data) : 'nenhuma agendada';
-  document.getElementById('stat-tarefas').textContent = tar.length;
-  document.getElementById('stat-tar-sub').textContent = tar.filter(t=>t.prioridade==='Alta').length+' de alta prioridade';
-  document.getElementById('stat-processos').textContent = proc.length;
-  document.getElementById('stat-proc-sub').textContent = dados.processos.length+' total';
-  document.getElementById('badge-prazos').textContent = pend.filter(p=>diasRestantes(p.vencimento)<=5).length;
-  document.getElementById('badge-tarefas').textContent = tar.filter(t=>t.prioridade==='Alta').length;
+  document.getElementById('stat-prazos').textContent=pend.length;
+  document.getElementById('stat-prazos-sub').textContent=pend.filter(p=>diasRestantes(p.vencimento)<=3).length+' críticos (≤3 dias)';
+  document.getElementById('stat-audiencias').textContent=aud.length;
+  document.getElementById('stat-aud-sub').textContent=aud.length?'próxima: '+fmtDate([...aud].sort((a,b)=>a.data.localeCompare(b.data))[0].data):'nenhuma agendada';
+  document.getElementById('stat-tarefas').textContent=tar.length;
+  document.getElementById('stat-tar-sub').textContent=tar.filter(t=>t.prioridade==='Alta').length+' de alta prioridade';
+  document.getElementById('stat-processos').textContent=proc.length;
+  document.getElementById('stat-proc-sub').textContent=dados.processos.length+' total';
+  document.getElementById('badge-prazos').textContent=pend.filter(p=>diasRestantes(p.vencimento)<=5).length;
+  document.getElementById('badge-tarefas').textContent=tar.filter(t=>t.prioridade==='Alta').length;
 
-  const h = hoje();
-  const itens = [
+  // Financeiro dashboard
+  const m=mesAtual();
+  const rMes=dados.receitas.filter(r=>r.data&&r.data.startsWith(m));
+  const dMes=dados.despesas.filter(d=>d.data&&d.data.startsWith(m));
+  const totalRM=rMes.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+  const totalDM=dMes.reduce((s,d)=>s+(parseFloat(d.valor)||0),0);
+  const saldoM=totalRM-totalDM;
+  const aReceber=dados.receitas.filter(r=>r.status==='Pendente'||r.status==='Parcial').reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+  document.getElementById('dash-receita-mes').textContent=fmtBRL(totalRM);
+  document.getElementById('dash-receita-sub').textContent=rMes.length+' lançamentos no mês';
+  document.getElementById('dash-despesa-mes').textContent=fmtBRL(totalDM);
+  document.getElementById('dash-despesa-sub').textContent=dMes.length+' lançamentos no mês';
+  const sEl=document.getElementById('dash-saldo-mes');
+  sEl.textContent=fmtBRL(saldoM);
+  sEl.className='stat-number '+(saldoM>=0?'positivo':'negativo');
+  document.getElementById('dash-a-receber').textContent=fmtBRL(aReceber);
+
+  const h=hoje();
+  const itens=[
     ...dados.prazos.filter(p=>p.vencimento===h).map(p=>({hora:'–',desc:p.descricao,meta:'Prazo — '+p.cliente})),
     ...dados.audiencias.filter(a=>a.data===h).map(a=>({hora:a.hora,desc:a.descricao,meta:'Audiência — '+a.cliente})),
     ...dados.reunioes.filter(r=>r.data===h).map(r=>({hora:r.hora,desc:r.assunto,meta:r.tipo+' — '+r.cliente})),
   ].sort((a,b)=>a.hora.localeCompare(b.hora));
+  document.getElementById('agenda-hoje-list').innerHTML=itens.length
+    ?itens.map(i=>'<div class="agenda-item"><div class="agenda-time">'+i.hora+'</div><div class="agenda-info"><div class="agenda-desc">'+i.desc+'</div><div class="agenda-meta">'+i.meta+'</div></div></div>').join('')
+    :'<div class="empty-state"><p>Nenhum compromisso para hoje.</p></div>';
 
-  document.getElementById('agenda-hoje-list').innerHTML = itens.length
-    ? itens.map(i=>'<div class="agenda-item"><div class="agenda-time">'+i.hora+'</div><div class="agenda-info"><div class="agenda-desc">'+i.desc+'</div><div class="agenda-meta">'+i.meta+'</div></div></div>').join('')
-    : '<div class="empty-state"><p>Nenhum compromisso para hoje.</p></div>';
-
-  const criticos = dados.prazos.filter(p=>p.status==='Pendente'&&diasRestantes(p.vencimento)<=7).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
-  document.getElementById('prazos-criticos-list').innerHTML = criticos.length
-    ? '<table><thead><tr><th>Prazo</th><th>Processo</th><th>Cliente</th><th>Tribunal</th><th>Vencimento</th><th>Restam</th></tr></thead><tbody>'+criticos.map(p=>'<tr class="'+(diasRestantes(p.vencimento)<=2?'urgente':'')+'"><td><strong>'+p.descricao+'</strong></td><td style="font-size:11.5px;color:#888">'+( p.processo||'—')+'</td><td>'+p.cliente+'</td><td><span class="badge badge-blue">'+p.tribunal+'</span></td><td>'+fmtDate(p.vencimento)+'</td><td>'+countdownBadge(p.vencimento,p.status)+'</td></tr>').join('')+'</tbody></table>'
-    : '<div class="empty-state"><p>Sem prazos críticos nos próximos 7 dias. ✓</p></div>';
+  const criticos=dados.prazos.filter(p=>p.status==='Pendente'&&diasRestantes(p.vencimento)<=7).sort((a,b)=>a.vencimento.localeCompare(b.vencimento));
+  document.getElementById('prazos-criticos-list').innerHTML=criticos.length
+    ?'<table><thead><tr><th>Prazo</th><th>Processo</th><th>Cliente</th><th>Tribunal</th><th>Vencimento</th><th>Restam</th></tr></thead><tbody>'+criticos.map(p=>'<tr class="'+(diasRestantes(p.vencimento)<=2?'urgente':'')+'"><td><strong>'+p.descricao+'</strong></td><td style="font-size:11.5px;color:#888">'+(p.processo||'—')+'</td><td>'+p.cliente+'</td><td><span class="badge badge-blue">'+p.tribunal+'</span></td><td>'+fmtDate(p.vencimento)+'</td><td>'+countdownBadge(p.vencimento,p.status)+'</td></tr>').join('')+'</tbody></table>'
+    :'<div class="empty-state"><p>Sem prazos críticos nos próximos 7 dias. ✓</p></div>';
 }
 
 // ============================================================
 // TABLES
 // ============================================================
-const cols = {
+const cols={
   prazos:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   audiencias:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente/Parte'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'cliente',l:'Cliente'},{k:'processo',l:'Processo'},{k:'tipo',l:'Tipo'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  despesas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'fornecedor',l:'Fornecedor'},{k:'categoria',l:'Categoria'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
 };
 
 function renderTable(type) {
-  const container = document.getElementById('table-'+type);
+  const container=document.getElementById('table-'+type);
   if(!container) return;
-  const tc = container.closest('.table-container');
-  const search = ((tc.querySelector('.search-input')||{}).value||'').toLowerCase();
-  let rows = [...(dados[type]||[])];
+  const tc=container.closest('.table-container');
+  const search=((tc.querySelector('.search-input')||{}).value||'').toLowerCase();
+  let rows=[...(dados[type]||[])];
   tc.querySelectorAll('.filter-row select').forEach(sel=>{ if(sel.value) rows=rows.filter(r=>Object.values(r).some(v=>String(v)===sel.value)); });
   if(search) rows=rows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(search)));
 
-  const c = cols[type];
-  if(!rows.length){ container.innerHTML='<div class="empty-state"><p>Nenhum registro encontrado.</p></div>'; return; }
+  const c=cols[type];
+  if(!rows.length){container.innerHTML='<div class="empty-state"><p>Nenhum registro encontrado.</p></div>';return;}
 
-  const statusMap={'Pendente':'badge-amber','Concluído':'badge-green','Concluída':'badge-green','Vencido':'badge-gray','Agendada':'badge-blue','Agendado':'badge-blue','Ativo':'badge-green','Em andamento':'badge-blue','Realizado':'badge-green','Arquivado':'badge-gray','Cancelada':'badge-gray','Cancelado':'badge-gray','Suspenso':'badge-amber','Extinto':'badge-gray'};
+  const statusMap={'Pendente':'badge-amber','Concluído':'badge-green','Concluída':'badge-green','Vencido':'badge-gray','Agendada':'badge-blue','Agendado':'badge-blue','Ativo':'badge-green','Em andamento':'badge-blue','Realizado':'badge-green','Arquivado':'badge-gray','Cancelada':'badge-gray','Cancelado':'badge-gray','Suspenso':'badge-amber','Extinto':'badge-gray','Recebido':'badge-green','Pago':'badge-green','Parcial':'badge-amber','Inadimplente':'badge-red'};
   const prioMap={'Alta':'badge-red','Média':'badge-amber','Baixa':'badge-gray'};
 
-  const headers = [...c,{k:'_a',l:'Ações'}].map(col=>'<th>'+col.l+'</th>').join('');
-  const body = rows.map(row=>{
-    const cells = c.map(col=>{
-      const v = row[col.k]||'—';
+  // totais para financeiro
+  let totalRow='';
+  if(type==='receitas'||type==='despesas'){
+    const total=rows.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+    const cls=type==='receitas'?'valor-receita':'valor-despesa';
+    totalRow='<tr style="background:var(--cream2);font-weight:700;"><td colspan="'+(c.length)+'" style="text-align:right;padding-right:8px;font-size:12px;color:#666;">TOTAL FILTRADO</td><td class="'+cls+'">'+fmtBRL(total)+'</td><td></td></tr>';
+    // swap: put valor last in display — already in cols order
+  }
+
+  const headers=[...c,{k:'_a',l:'Ações'}].map(col=>'<th>'+col.l+'</th>').join('');
+  const body=rows.map(row=>{
+    const cells=c.map(col=>{
+      const v=row[col.k]||'—';
       if(['vencimento','data','prazo'].includes(col.k)&&row[col.k]) return '<td>'+fmtDate(row[col.k])+'</td>';
+      if(col.k==='valor'){
+        const cls=type==='receitas'?'valor-receita':'valor-despesa';
+        return '<td class="'+cls+'">'+fmtBRL(row[col.k])+'</td>';
+      }
       if(col.k==='status') return '<td><span class="badge '+(statusMap[v]||'badge-gray')+'">'+v+'</span></td>';
       if(col.k==='prioridade') return '<td><span class="badge '+(prioMap[v]||'badge-gray')+'">'+v+'</span></td>';
-      if(col.k==='tribunal'||col.k==='area') return '<td><span class="badge badge-blue">'+v+'</span></td>';
-      if(col.k==='observacao') return '<td style="font-size:11.5px;color:#999;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+v+'">'+v+'</td>';
+      if(col.k==='tribunal'||col.k==='area'||col.k==='categoria'||col.k==='tipo'&&(type==='receitas')) return '<td><span class="badge badge-blue">'+v+'</span></td>';
+      if(col.k==='observacao') return '<td style="font-size:11.5px;color:#999;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+v+'">'+v+'</td>';
       return '<td>'+v+'</td>';
     }).join('');
     const actions='<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')">🗑</button></div></td>';
-    const urg = type==='prazos'&&row.status==='Pendente'&&diasRestantes(row.vencimento)<=2;
+    const urg=type==='prazos'&&row.status==='Pendente'&&diasRestantes(row.vencimento)<=2;
     return '<tr class="'+(urg?'urgente':'')+'">'+cells+actions+'</tr>';
   }).join('');
-  container.innerHTML='<table><thead><tr>'+headers+'</tr></thead><tbody>'+body+'</tbody></table>';
+  container.innerHTML='<table><thead><tr>'+headers+'</tr></thead><tbody>'+body+totalRow+'</tbody></table>';
 }
 
 // ============================================================
-// MODAL
+// MODAL FORMS
 // ============================================================
-const modalForms = {
+const modalForms={
   prazo:{title:'Novo Prazo',fields:[
-    {n:'descricao',l:'Descrição do Prazo',type:'text',full:true,req:true},
+    {n:'descricao',l:'Descrição',type:'text',full:true,req:true},
     {n:'processo',l:'Nº do Processo',type:'text'},{n:'cliente',l:'Cliente/Parte',type:'text',req:true},
     {n:'tribunal',l:'Tribunal',type:'select',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},
     {n:'vencimento',l:'Vencimento',type:'date',req:true},
@@ -716,96 +840,131 @@ const modalForms = {
     {n:'observacao',l:'Observações',type:'textarea',full:true},
   ]},
   tarefa:{title:'Nova Tarefa',fields:[
-    {n:'descricao',l:'Descrição da Tarefa',type:'text',full:true,req:true},
+    {n:'descricao',l:'Descrição',type:'text',full:true,req:true},
     {n:'processo',l:'Nº do Processo (se houver)',type:'text'},{n:'cliente',l:'Cliente',type:'text'},
     {n:'prazo',l:'Prazo',type:'date'},
     {n:'prioridade',l:'Prioridade',type:'select',opts:['Alta','Média','Baixa']},
     {n:'status',l:'Status',type:'select',opts:['Pendente','Em andamento','Concluída']},
     {n:'observacao',l:'Observações',type:'textarea',full:true},
   ]},
+  receita:{title:'Nova Receita / Honorário',fields:[
+    {n:'descricao',l:'Descrição',type:'text',full:true,req:true},
+    {n:'cliente',l:'Cliente',type:'text',req:true},
+    {n:'processo',l:'Nº do Processo (se houver)',type:'text'},
+    {n:'valor',l:'Valor (R$)',type:'number',req:true},
+    {n:'data',l:'Data',type:'date',req:true},
+    {n:'tipo',l:'Tipo',type:'select',opts:['Honorários Contratuais','Honorários Êxito','Consulta','Elaboração de Documento','Outros']},
+    {n:'status',l:'Status',type:'select',opts:['Recebido','Pendente','Parcial','Inadimplente']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
+  despesa:{title:'Nova Despesa',fields:[
+    {n:'descricao',l:'Descrição',type:'text',full:true,req:true},
+    {n:'fornecedor',l:'Fornecedor / Credor',type:'text'},
+    {n:'valor',l:'Valor (R$)',type:'number',req:true},
+    {n:'data',l:'Data',type:'date',req:true},
+    {n:'categoria',l:'Categoria',type:'select',opts:['Aluguel','Pessoal','Custas Processuais','Marketing','TI / Software','Telefone / Internet','Materiais','Outros']},
+    {n:'status',l:'Status',type:'select',opts:['Pago','Pendente','Vencido']},
+    {n:'observacao',l:'Observações',type:'textarea',full:true},
+  ]},
 };
 
-const typeToKey={prazo:'prazos',prazos:'prazos',audiencia:'audiencias',audiencias:'audiencias',reuniao:'reunioes',reunioes:'reunioes',processo:'processos',processos:'processos',tarefa:'tarefas',tarefas:'tarefas'};
-const keyToModal={prazos:'prazo',audiencias:'audiencia',reunioes:'reuniao',processos:'processo',tarefas:'tarefa'};
-let currentModalType = null;
+const typeToKey={prazo:'prazos',prazos:'prazos',audiencia:'audiencias',audiencias:'audiencias',reuniao:'reunioes',reunioes:'reunioes',processo:'processos',processos:'processos',tarefa:'tarefas',tarefas:'tarefas',receita:'receitas',receitas:'receitas',despesa:'despesas',despesas:'despesas'};
+const keyToModal={prazos:'prazo',audiencias:'audiencia',reunioes:'reuniao',processos:'processo',tarefas:'tarefa',receitas:'receita',despesas:'despesa'};
+let currentModalType=null;
 
-function openModal(type) {
-  currentModalType = type; editingId = null;
-  const cfg = modalForms[type];
-  document.getElementById('modal-title').textContent = cfg.title;
-  document.getElementById('modal-body').innerHTML = buildForm(cfg.fields, {});
+function openModal(type){
+  currentModalType=type; editingId=null;
+  const cfg=modalForms[type];
+  document.getElementById('modal-title').textContent=cfg.title;
+  document.getElementById('modal-body').innerHTML=buildForm(cfg.fields,{});
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function openEdit(type, id) {
-  const key = typeToKey[type];
-  const modalType = keyToModal[key]||type;
-  currentModalType = modalType; editingId = id;
-  const item = dados[key] && dados[key].find(r=>r.id===id);
+function openEdit(type,id){
+  const key=typeToKey[type]; const modalType=keyToModal[key]||type;
+  currentModalType=modalType; editingId=id;
+  const item=dados[key]&&dados[key].find(r=>r.id===id);
   if(!item) return;
-  const cfg = modalForms[modalType];
-  document.getElementById('modal-title').textContent = 'Editar — '+cfg.title.replace('Novo ','').replace('Nova ','');
-  document.getElementById('modal-body').innerHTML = buildForm(cfg.fields, item);
+  const cfg=modalForms[modalType];
+  document.getElementById('modal-title').textContent='Editar — '+cfg.title.replace('Novo ','').replace('Nova ','');
+  document.getElementById('modal-body').innerHTML=buildForm(cfg.fields,item);
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function buildForm(fields, data) {
+function buildForm(fields,data){
   return '<div class="form-grid">'+fields.map(f=>{
-    const ctrl = f.type==='select'
-      ? '<select class="form-control" name="'+f.n+'">'+f.opts.map(o=>'<option'+(data[f.n]===o?' selected':'')+'>'+o+'</option>').join('')+'</select>'
-      : f.type==='textarea'
-      ? '<textarea class="form-control" name="'+f.n+'">'+(data[f.n]||'')+'</textarea>'
-      : '<input class="form-control" type="'+f.type+'" name="'+f.n+'" value="'+(data[f.n]||'')+'">';
+    const ctrl=f.type==='select'
+      ?'<select class="form-control" name="'+f.n+'">'+f.opts.map(o=>'<option'+(data[f.n]===o?' selected':'')+'>'+o+'</option>').join('')+'</select>'
+      :f.type==='textarea'
+      ?'<textarea class="form-control" name="'+f.n+'">'+(data[f.n]||'')+'</textarea>'
+      :'<input class="form-control" type="'+f.type+'" name="'+f.n+'" value="'+(data[f.n]||'')+'" step="'+(f.type==='number'?'0.01':'')+'">';
     return '<div class="form-group'+(f.full?' full':'')+'"><label class="form-label">'+f.l+(f.req?' *':'')+'</label>'+ctrl+'</div>';
   }).join('')+'</div>';
 }
 
-function saveItem() {
+function saveItem(){
   const obj={};
   document.getElementById('modal-body').querySelectorAll('[name]').forEach(el=>{ obj[el.name]=el.value.trim(); });
-  const key = typeToKey[currentModalType];
-  if(editingId) {
-    const idx = dados[key].findIndex(r=>r.id===editingId);
+  const key=typeToKey[currentModalType];
+  if(editingId){
+    const idx=dados[key].findIndex(r=>r.id===editingId);
     if(idx>=0) dados[key][idx]={...dados[key][idx],...obj};
   } else {
-    const maxId = dados[key].length ? Math.max(...dados[key].map(r=>r.id)) : 0;
+    const maxId=dados[key].length?Math.max(...dados[key].map(r=>r.id)):0;
     dados[key].push({id:maxId+1,...obj});
   }
-  saveData(); closeModal(); renderTable(key); renderDashboard();
+  saveData(); closeModal();
+  renderTable(key);
+  if(key==='receitas'||key==='despesas') renderFinanceiro();
+  renderDashboard();
 }
 
-function deleteItem(type, id) {
+function deleteItem(type,id){
   if(!confirm('Remover este registro?')) return;
-  const key = typeToKey[type]||type;
+  const key=typeToKey[type]||type;
   dados[key]=dados[key].filter(r=>r.id!==id);
-  saveData(); renderTable(key); renderDashboard();
+  saveData(); renderTable(key);
+  if(key==='receitas'||key==='despesas') renderFinanceiro();
+  renderDashboard();
 }
 
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-  editingId = null;
-}
-
-document.getElementById('modal-overlay').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); editingId=null; }
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
 // ============================================================
 // EXCEL
 // ============================================================
-function exportarExcel() {
-  const wb = XLSX.utils.book_new();
+function exportarExcel(){
+  const wb=XLSX.utils.book_new();
   [{name:'Prazos',data:dados.prazos,cols:['descricao','processo','cliente','tribunal','vencimento','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Tribunal','Vencimento','Tipo','Status','Observações']},
    {name:'Audiências',data:dados.audiencias,cols:['descricao','processo','cliente','data','hora','local','tipo','status','observacao'],headers:['Descrição','Nº Processo','Cliente','Data','Hora','Local','Tipo','Status','Observações']},
    {name:'Reuniões',data:dados.reunioes,cols:['tipo','cliente','data','hora','local','assunto','status','observacao'],headers:['Tipo','Cliente','Data','Hora','Local','Assunto','Status','Observações']},
    {name:'Processos',data:dados.processos,cols:['numero','cliente','polo','area','tribunal','vara','fase','status','observacao'],headers:['Nº Processo','Cliente','Polo','Área','Tribunal','Vara/Juízo','Fase','Status','Observações']},
    {name:'Tarefas',data:dados.tarefas,cols:['descricao','processo','cliente','prazo','prioridade','status','observacao'],headers:['Tarefa','Nº Processo','Cliente','Prazo','Prioridade','Status','Observações']},
+   {name:'Receitas',data:dados.receitas,cols:['data','descricao','cliente','processo','tipo','valor','status','observacao'],headers:['Data','Descrição','Cliente','Processo','Tipo','Valor (R$)','Status','Observações']},
+   {name:'Despesas',data:dados.despesas,cols:['data','descricao','fornecedor','categoria','valor','status','observacao'],headers:['Data','Descrição','Fornecedor','Categoria','Valor (R$)','Status','Observações']},
   ].forEach(s=>{
     const rows=[s.headers,...s.data.map(r=>s.cols.map(c=>r[c]||''))];
     const ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=s.headers.map((_,i)=>({wch:Math.max(s.headers[i].length,...s.data.map(r=>String(r[s.cols[i]]||'').length),12)}));
     XLSX.utils.book_append_sheet(wb,ws,s.name);
   });
-  const ws0=XLSX.utils.aoa_to_sheet([['GESTÃO JURÍDICA — TARCÍSIO FREIRE ADVOCACIA'],['Gerado em:',new Date().toLocaleDateString('pt-BR')],[],['Módulo','Total','Pendentes'],['Prazos',dados.prazos.length,dados.prazos.filter(p=>p.status==='Pendente').length],['Audiências',dados.audiencias.length,dados.audiencias.filter(a=>a.status==='Agendada').length],['Reuniões',dados.reunioes.length,dados.reunioes.filter(r=>r.status==='Agendado').length],['Processos',dados.processos.length,dados.processos.filter(p=>p.status==='Ativo').length],['Tarefas',dados.tarefas.length,dados.tarefas.filter(t=>t.status!=='Concluída').length]]);
-  ws0['!cols']=[{wch:35},{wch:10},{wch:15}];
+  const totalR=dados.receitas.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+  const totalD=dados.despesas.reduce((s,r)=>s+(parseFloat(r.valor)||0),0);
+  const ws0=XLSX.utils.aoa_to_sheet([
+    ['GESTÃO JURÍDICA — TARCÍSIO FREIRE ADVOCACIA'],['Gerado em:',new Date().toLocaleDateString('pt-BR')],[],
+    ['Módulo','Total','Pendentes/Ativos'],
+    ['Prazos',dados.prazos.length,dados.prazos.filter(p=>p.status==='Pendente').length],
+    ['Audiências',dados.audiencias.length,dados.audiencias.filter(a=>a.status==='Agendada').length],
+    ['Reuniões',dados.reunioes.length,dados.reunioes.filter(r=>r.status==='Agendado').length],
+    ['Processos',dados.processos.length,dados.processos.filter(p=>p.status==='Ativo').length],
+    ['Tarefas',dados.tarefas.length,dados.tarefas.filter(t=>t.status!=='Concluída').length],[],
+    ['FINANCEIRO','',''],
+    ['Total Receitas','R$ '+totalR.toFixed(2),''],
+    ['Total Despesas','R$ '+totalD.toFixed(2),''],
+    ['Saldo','R$ '+(totalR-totalD).toFixed(2),''],
+  ]);
+  ws0['!cols']=[{wch:30},{wch:15},{wch:15}];
   XLSX.utils.book_append_sheet(wb,ws0,'Resumo');
   XLSX.writeFile(wb,'gestao_juridica_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
@@ -813,15 +972,11 @@ function exportarExcel() {
 // ============================================================
 // INIT
 // ============================================================
-function init() {
-  loadLocal();
-  renderDashboard();
-  document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  const t = setInterval(()=>{
-    if(window.google && window.google.accounts) { clearInterval(t); initGoogle(); }
-  }, 300);
+function init(){
+  loadLocal(); renderDashboard();
+  document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const t=setInterval(()=>{ if(window.google&&window.google.accounts){clearInterval(t);initGoogle();} },300);
 }
-
 init();
 </script>
 </body>
