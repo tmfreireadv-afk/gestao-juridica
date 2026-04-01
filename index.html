@@ -9,7 +9,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
-    --ink:#1a1a2e;--ink2:#1b3a5c;--sidebar-bg:#1e4976;
+    --ink:#1a1a2e;--ink2:#1b3a5c;--sidebar-bg:#3a7bbf;
     --gold:#c9a84c;--gold-light:#e8c97a;
     --cream:#f9f6ef;--cream2:#f2ede0;
     --green:#2e7d5e;--green-light:#e6f4ef;
@@ -28,10 +28,10 @@
   .brand-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:0.3px;line-height:1.3;}
   .brand-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
   .nav{flex:1;padding:16px 0;overflow-y:auto;}
-  .nav-section{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,0.45);padding:14px 20px 6px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#d0e8ff;font-size:13.5px;font-weight:500;transition:all .15s;border-left:3px solid transparent;}
-  .nav-item:hover{color:#fff;background:rgba(255,255,255,0.1);}
-  .nav-item.active{color:#fff;background:rgba(201,168,76,0.18);border-left-color:var(--gold);font-weight:600;}
+  .nav-section{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(0,0,0,0.55);padding:14px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#000;font-size:13.5px;font-weight:700;transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:#fff;background:rgba(0,0,0,0.15);}
+  .nav-item.active{color:#fff;background:rgba(0,0,0,0.2);border-left-color:var(--gold);font-weight:800;}
   .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
   .nav-item.active svg{opacity:1;}
   .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center;}
@@ -182,6 +182,37 @@
   .toast.error{border-left:4px solid var(--red);}
   .toast.info{border-left:4px solid var(--gold);}
 
+  /* AGENDA MES */
+  .agenda-mes-dia{background:#fff;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .agenda-mes-dia-header{padding:10px 16px;background:var(--ink2);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px;}
+  .agenda-mes-dia-header.hoje-header{background:var(--gold);color:var(--ink2);}
+  .agenda-mes-item{display:flex;align-items:flex-start;gap:12px;padding:9px 16px;border-bottom:1px solid var(--cream2);}
+  .agenda-mes-item:last-child{border-bottom:none;}
+  .agenda-mes-hora{font-size:11.5px;font-weight:700;color:var(--gold);min-width:42px;}
+  .agenda-mes-tipo{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:700;flex-shrink:0;}
+  .tipo-prazo{background:var(--red-light);color:var(--red);}
+  .tipo-audiencia{background:var(--blue-light);color:var(--blue);}
+  .tipo-reuniao{background:var(--amber-light);color:var(--amber);}
+  .tipo-tarefa{background:var(--green-light);color:var(--green);}
+  .tipo-receita{background:#e8f5e9;color:#2e7d32;}
+  .agenda-mes-desc{flex:1;font-size:13px;font-weight:500;}
+  .agenda-mes-meta{font-size:11.5px;color:#999;}
+  /* GMAIL INTIMACOES */
+  .gmail-item{background:#fff;border-radius:8px;border:1px solid var(--border);padding:14px 16px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+  .gmail-assunto{font-weight:600;font-size:13.5px;color:var(--ink);}
+  .gmail-meta{font-size:11.5px;color:#999;margin-top:3px;}
+  .gmail-snippet{font-size:12.5px;color:#555;margin-top:6px;line-height:1.5;}
+  /* PRINT */
+  @media print{
+    .sidebar,.topbar,.drive-status,.modal-overlay,.toast,.btn,.actions{display:none!important;}
+    .main{margin-left:0!important;}
+    .content{padding:10px!important;}
+    body{background:#fff;}
+    .print-header{display:block!important;}
+    table{font-size:11px;}
+  }
+  .print-header{display:none;font-family:'Playfair Display',serif;margin-bottom:16px;}
+
   @media(max-width:900px){.stats-grid,.fin-resumo{grid-template-columns:repeat(2,1fr);}.form-grid{grid-template-columns:1fr;}.form-group.full{grid-column:1;}}
   @media(max-width:700px){.sidebar{width:200px;}.main{margin-left:200px;}.content{padding:16px;}.topbar{padding:12px 16px;}}
 </style>
@@ -206,7 +237,7 @@
     </div>
     <div class="nav-item" onclick="showView('audiencias',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      Audiências
+      Audiências <span class="nav-badge" id="badge-audiencias">0</span>
     </div>
     <div class="nav-item" onclick="showView('reunioes',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -220,6 +251,14 @@
     <div class="nav-item" onclick="showView('tarefas',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       Tarefas <span class="nav-badge" id="badge-tarefas">0</span>
+    </div>
+    <div class="nav-item" onclick="showView('agenda_mes',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+      Agenda do Mês
+    </div>
+    <div class="nav-item" onclick="showView('intimacoes',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Intimações Gmail
     </div>
     <div class="nav-section">Financeiro</div>
     <div class="nav-item" onclick="showView('financeiro',this)">
@@ -309,6 +348,7 @@
         <div class="table-toolbar">
           <input class="search-input" placeholder="Buscar prazo, processo, cliente…" oninput="renderTable('prazos')">
           <button class="btn btn-primary" onclick="openModal('prazo')">+ Novo Prazo</button>
+          <button class="btn btn-ghost" onclick="imprimirTabela('prazos')" title="Imprimir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
         </div>
         <div class="filter-row">
           <span class="filter-label">Status:</span>
@@ -326,6 +366,7 @@
         <div class="table-toolbar">
           <input class="search-input" placeholder="Buscar audiência…" oninput="renderTable('audiencias')">
           <button class="btn btn-primary" onclick="openModal('audiencia')">+ Nova Audiência</button>
+          <button class="btn btn-ghost" onclick="imprimirTabela('audiencias')" title="Imprimir"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg> Imprimir</button>
         </div>
         <div id="table-audiencias"></div>
       </div>
@@ -441,6 +482,34 @@
   </div><!-- /content -->
 </main>
 
+    <!-- AGENDA DO MÊS -->
+    <div id="view-agenda_mes" class="view">
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" onclick="mudaMes(-1)">◀ Mês Anterior</button>
+        <div style="font-family:'Playfair Display',serif;font-size:18px;font-weight:600;flex:1;text-align:center;" id="mes-titulo"></div>
+        <button class="btn btn-ghost" onclick="mudaMes(1)">Próximo Mês ▶</button>
+        <button class="btn btn-gold" onclick="imprimirAgenda()" style="gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Imprimir
+        </button>
+      </div>
+      <div id="agenda-mes-content"></div>
+    </div>
+
+
+    <!-- INTIMAÇÕES GMAIL -->
+    <div id="view-intimacoes" class="view">
+      <div style="background:#fff;border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;flex:1;">📧 Intimações recebidas no Gmail</div>
+          <button class="btn btn-primary" onclick="buscarIntimacoes()">🔄 Atualizar</button>
+        </div>
+        <p style="font-size:12px;color:#888;margin-bottom:0;">Exibe e-mails com termos jurídicos dos últimos 30 dias (intimação, despacho, sentença, citação, publicação). Requer que o Google Drive esteja conectado.</p>
+      </div>
+      <div id="gmail-lista"><div class="empty-state"><p>Clique em "Atualizar" para buscar as intimações.</p></div></div>
+    </div>
+
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
@@ -463,7 +532,7 @@
 // GOOGLE DRIVE
 // ============================================================
 const CLIENT_ID = '930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/gmail.readonly';
 const DRIVE_FILE_NAME = 'gestao_juridica_dados.json';
 let tokenClient=null, accessToken=null, driveFileId=null, userEmail='', syncTimeout=null;
 
@@ -490,7 +559,16 @@ function saveLocal() { localStorage.setItem('gestao_juridica_v3', JSON.stringify
 
 function saveData() {
   saveLocal();
-  if(accessToken){ clearTimeout(syncTimeout); setSyncStatus('saving','Salvando…'); syncTimeout=setTimeout(()=>syncDrive('upload',true),1500); }
+  if(accessToken){
+    clearTimeout(syncTimeout);
+    setSyncStatus('saving','Salvando…');
+    syncTimeout=setTimeout(async()=>{
+      try{ await syncDrive('upload',true); }
+      catch(e){ setSyncStatus('error','Erro ao salvar'); }
+    },1500);
+  } else {
+    setSyncStatus('offline','Salvo localmente');
+  }
 }
 
 function fmtBRL(v) {
@@ -626,7 +704,7 @@ function toast(msg,type='info'){ const el=document.getElementById('toast'); el.t
 // ============================================================
 // NAVIGATION
 // ============================================================
-const titles={dashboard:'Dashboard',prazos:'Prazos Processuais',audiencias:'Audiências',reunioes:'Reuniões & Atendimentos',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro'};
+const titles={dashboard:'Dashboard',prazos:'Prazos Processuais',audiencias:'Audiências',reunioes:'Reuniões & Atendimentos',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro',agenda_mes:'Agenda do Mês',intimacoes:'Intimações Gmail'};
 
 function showView(name,el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -636,6 +714,8 @@ function showView(name,el) {
   document.getElementById('page-title').textContent = titles[name];
   if(name==='dashboard') renderDashboard();
   else if(name==='financeiro') renderFinanceiro();
+  else if(name==='agenda_mes') renderAgendaMes();
+  else if(name==='intimacoes'){ buscarIntimacoes(); }
   else renderTable(name);
 }
 
@@ -703,6 +783,7 @@ function renderDashboard() {
   document.getElementById('stat-processos').textContent=proc.length;
   document.getElementById('stat-proc-sub').textContent=dados.processos.length+' total';
   document.getElementById('badge-prazos').textContent=pend.length;
+  document.getElementById('badge-audiencias').textContent=aud.length;
   document.getElementById('badge-tarefas').textContent=tar.filter(t=>t.prioridade==='Alta').length;
 
   // Financeiro dashboard
@@ -723,10 +804,13 @@ function renderDashboard() {
   document.getElementById('dash-a-receber').textContent=fmtBRL(aReceber);
 
   const h=hoje();
+  const statusAtivos=['Pendente','Agendada','Agendado','Inadimplente','Vencido','Em andamento'];
   const itens=[
-    ...dados.prazos.filter(p=>p.vencimento===h).map(p=>({hora:'–',desc:p.descricao,meta:'Prazo — '+p.cliente})),
-    ...dados.audiencias.filter(a=>a.data===h).map(a=>({hora:a.hora,desc:a.descricao,meta:'Audiência — '+a.cliente})),
-    ...dados.reunioes.filter(r=>r.data===h).map(r=>({hora:r.hora,desc:r.assunto,meta:r.tipo+' — '+r.cliente})),
+    ...dados.prazos.filter(p=>p.vencimento===h&&statusAtivos.includes(p.status)).map(p=>({hora:'–',desc:p.descricao,meta:'⏰ Prazo — '+p.cliente,tipo:'prazo'})),
+    ...dados.audiencias.filter(a=>a.data===h&&statusAtivos.includes(a.status)).map(a=>({hora:a.hora||'–',desc:a.descricao,meta:'🏛 Audiência — '+a.cliente,tipo:'audiencia'})),
+    ...dados.reunioes.filter(r=>r.data===h&&statusAtivos.includes(r.status)).map(r=>({hora:r.hora||'–',desc:r.assunto,meta:'📋 '+r.tipo+' — '+r.cliente,tipo:'reuniao'})),
+    ...dados.tarefas.filter(t=>t.prazo===h&&statusAtivos.includes(t.status)).map(t=>({hora:'–',desc:t.descricao,meta:'✅ Tarefa — '+( t.cliente||'Geral'),tipo:'tarefa'})),
+    ...dados.receitas.filter(r=>r.data===h&&['Pendente','Parcial','Inadimplente'].includes(r.status)).map(r=>({hora:'–',desc:r.descricao,meta:'💰 Recebimento — '+r.cliente,tipo:'receita'})),
   ].sort((a,b)=>a.hora.localeCompare(b.hora));
   document.getElementById('agenda-hoje-list').innerHTML=itens.length
     ?itens.map(i=>'<div class="agenda-item"><div class="agenda-time">'+i.hora+'</div><div class="agenda-info"><div class="agenda-desc">'+i.desc+'</div><div class="agenda-meta">'+i.meta+'</div></div></div>').join('')
@@ -745,7 +829,7 @@ const cols={
   prazos:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   audiencias:[{k:'descricao',l:'Descrição'},{k:'processo',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente/Parte'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
-  processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contrária'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  processos:[{k:'numero',l:'Nº Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contrária'},{k:'polo',l:'Polo'},{k:'area',l:'Área'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juízo'},{k:'comarca',l:'Comarca'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'cliente',l:'Cliente'},{k:'processo',l:'Processo'},{k:'tipo',l:'Tipo'},{k:'recorrente',l:'Recorrência'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   despesas:[{k:'data',l:'Data'},{k:'descricao',l:'Descrição'},{k:'fornecedor',l:'Fornecedor'},{k:'categoria',l:'Categoria'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
@@ -868,6 +952,7 @@ const modalForms={
     {n:'area',l:'Área',type:'select',opts:['Cível','Trabalhista','Consumidor','Família','Imobiliário','Previdenciário','Administrativo','Criminal']},
     {n:'tribunal',l:'Tribunal',type:'select',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},
     {n:'vara',l:'Vara/Juízo',type:'text'},
+    {n:'comarca',l:'Comarca',type:'text'},
     {n:'fase',l:'Fase',type:'select',opts:['Conhecimento','Recursal','Execução','Arquivado']},
     {n:'status',l:'Status',type:'select',opts:['Ativo','Suspenso','Arquivado','Extinto']},
     {n:'observacao',l:'Observações',type:'textarea',full:true},
@@ -1034,6 +1119,114 @@ function exportarExcel(){
   ws0['!cols']=[{wch:30},{wch:15},{wch:15}];
   XLSX.utils.book_append_sheet(wb,ws0,'Resumo');
   XLSX.writeFile(wb,'gestao_juridica_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+
+// ============================================================
+// AGENDA DO MÊS
+// ============================================================
+let mesOffset = 0;
+
+function mudaMes(delta){ mesOffset+=delta; renderAgendaMes(); }
+
+function renderAgendaMes(){
+  const now = new Date();
+  now.setMonth(now.getMonth()+mesOffset);
+  const ano = now.getFullYear();
+  const mes = now.getMonth();
+  const nomeMes = now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  document.getElementById('mes-titulo').textContent = nomeMes.charAt(0).toUpperCase()+nomeMes.slice(1);
+
+  const prefixo = ano+'-'+String(mes+1).padStart(2,'0');
+  const statusAtivos=['Pendente','Agendada','Agendado','Inadimplente','Vencido','Em andamento'];
+
+  // Agrupa por dia
+  const porDia = {};
+  const add = (data,hora,desc,meta,tipo) => {
+    if(!data||!data.startsWith(prefixo)) return;
+    if(!porDia[data]) porDia[data]=[];
+    porDia[data].push({hora:hora||'–',desc,meta,tipo});
+  };
+
+  dados.prazos.filter(p=>statusAtivos.includes(p.status)).forEach(p=>add(p.vencimento,'–',p.descricao,'Prazo — '+p.cliente,'prazo'));
+  dados.audiencias.filter(a=>statusAtivos.includes(a.status)).forEach(a=>add(a.data,a.hora,a.descricao,'Audiência — '+a.cliente,'audiencia'));
+  dados.reunioes.filter(r=>statusAtivos.includes(r.status)).forEach(r=>add(r.data,r.hora,r.assunto,r.tipo+' — '+r.cliente,'reuniao'));
+  dados.tarefas.filter(t=>statusAtivos.includes(t.status)&&t.prazo).forEach(t=>add(t.prazo,'–',t.descricao,'Tarefa — '+(t.cliente||'Geral'),'tarefa'));
+  dados.receitas.filter(r=>['Pendente','Parcial','Inadimplente'].includes(r.status)).forEach(r=>add(r.data,'–',r.descricao,'Recebimento — '+r.cliente,'receita'));
+
+  const dias = Object.keys(porDia).sort();
+  const hoje_str = hoje();
+  const el = document.getElementById('agenda-mes-content');
+
+  if(!dias.length){
+    el.innerHTML='<div class="empty-state"><p>Nenhum compromisso neste mês.</p></div>';
+    return;
+  }
+
+  const tipoLabel = {prazo:'PRAZO',audiencia:'AUDIÊNCIA',reuniao:'REUNIÃO',tarefa:'TAREFA',receita:'RECEBIMENTO'};
+  el.innerHTML = dias.map(dia=>{
+    const itens = porDia[dia].sort((a,b)=>a.hora.localeCompare(b.hora));
+    const [y,m,d] = dia.split('-');
+    const dtLabel = new Date(dia+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+    const isHoje = dia===hoje_str;
+    return '<div class="agenda-mes-dia"><div class="agenda-mes-dia-header '+(isHoje?'hoje-header':'')+'">'+(isHoje?'📌 HOJE — ':'')+dtLabel.charAt(0).toUpperCase()+dtLabel.slice(1)+'</div>'
+      +itens.map(i=>'<div class="agenda-mes-item"><span class="agenda-mes-hora">'+i.hora+'</span><span class="agenda-mes-tipo tipo-'+i.tipo+'">'+tipoLabel[i.tipo]+'</span><div><div class="agenda-mes-desc">'+i.desc+'</div><div class="agenda-mes-meta">'+i.meta+'</div></div></div>').join('')
+      +'</div>';
+  }).join('');
+}
+
+// ============================================================
+// IMPRIMIR
+// ============================================================
+function imprimirTabela(type){
+  const nomes={prazos:'Prazos Processuais',audiencias:'Audiências'};
+  const rows = [...(dados[type]||[])].sort((a,b)=>(a.vencimento||a.data||'').localeCompare(b.vencimento||b.data||''));
+  const c2 = cols[type];
+  const headers = c2.map(col=>col.l).join('</th><th>');
+  const body = rows.map(row=>'<tr>'+c2.map(col=>{
+    const v=row[col.k]||'';
+    if(['vencimento','data'].includes(col.k)&&v) return '<td>'+fmtDate(v)+'</td>';
+    return '<td>'+v+'</td>';
+  }).join('')+'</tr>').join('');
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>'+nomes[type]+'</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}h2{font-size:16px;margin-bottom:4px;}p{color:#666;margin-bottom:16px;font-size:11px;}table{width:100%;border-collapse:collapse;}th{background:#1b3a5c;color:#fff;padding:7px 8px;text-align:left;font-size:10px;}td{padding:6px 8px;border-bottom:1px solid #eee;}</style></head><body><h2>Tarcísio Freire Advocacia — '+nomes[type]+'</h2><p>Gerado em '+new Date().toLocaleDateString('pt-BR')+'</p><table><thead><tr><th>'+headers+'</th></tr></thead><tbody>'+body+'</tbody></table></body></html>');
+  w.document.close(); w.print();
+}
+
+function imprimirAgenda(){
+  const now=new Date(); now.setMonth(now.getMonth()+mesOffset);
+  const nomeMes=now.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  const content=document.getElementById('agenda-mes-content').innerHTML;
+  const w=window.open('','_blank');
+  w.document.write('<html><head><title>Agenda do Mês</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}h2{font-size:16px;margin-bottom:4px;}p{color:#666;margin-bottom:16px;}.agenda-mes-dia{border:1px solid #ddd;border-radius:6px;margin-bottom:12px;overflow:hidden;page-break-inside:avoid;}.agenda-mes-dia-header{background:#1b3a5c;color:#fff;padding:8px 12px;font-weight:700;font-size:12px;}.hoje-header{background:#c9a84c;color:#1b3a5c;}.agenda-mes-item{display:flex;gap:10px;padding:6px 12px;border-bottom:1px solid #f0f0f0;align-items:flex-start;}.agenda-mes-hora{font-weight:700;min-width:38px;font-size:10px;color:#c9a84c;}.agenda-mes-tipo{font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;background:#eee;min-width:60px;text-align:center;}.agenda-mes-desc{font-weight:600;font-size:11px;}.agenda-mes-meta{color:#888;font-size:10px;}</style></head><body><h2>Tarcísio Freire Advocacia</h2><p>Agenda — '+nomeMes+'</p>'+content+'</body></html>');
+  w.document.close(); w.print();
+}
+
+// ============================================================
+// GMAIL INTIMAÇÕES (via Google API)
+// ============================================================
+async function buscarIntimacoes(){
+  if(!accessToken){ toast('Conecte o Google Drive/Gmail primeiro.','info'); return; }
+  const el=document.getElementById('gmail-lista');
+  el.innerHTML='<div class="empty-state"><p>⏳ Buscando intimações no Gmail…</p></div>';
+  try{
+    const query=encodeURIComponent('subject:(intimação OR intimacao OR despacho OR sentença OR sentenca OR citação OR citacao OR publicação OR publicacao) newer_than:30d');
+    const r=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q='+query+'&maxResults=20',{headers:{Authorization:'Bearer '+accessToken}});
+    const data=await r.json();
+    if(!data.messages||!data.messages.length){el.innerHTML='<div class="empty-state"><p>Nenhuma intimação encontrada nos últimos 30 dias.</p></div>';return;}
+    const msgs=await Promise.all(data.messages.slice(0,15).map(async m=>{
+      const rm=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',{headers:{Authorization:'Bearer '+accessToken}});
+      return rm.json();
+    }));
+    el.innerHTML=msgs.map(m=>{
+      const subj=(m.payload.headers.find(h=>h.name==='Subject')||{}).value||'(sem assunto)';
+      const from=(m.payload.headers.find(h=>h.name==='From')||{}).value||'';
+      const date=(m.payload.headers.find(h=>h.name==='Date')||{}).value||'';
+      const dt=date?new Date(date).toLocaleDateString('pt-BR'):'';
+      const snip=m.snippet||'';
+      return '<div class="gmail-item"><div class="gmail-assunto">'+subj+'</div><div class="gmail-meta">'+from+' &nbsp;|&nbsp; '+dt+'</div><div class="gmail-snippet">'+snip+'</div></div>';
+    }).join('');
+  }catch(e){el.innerHTML='<div class="empty-state"><p>Erro ao buscar Gmail: '+e.message+'</p></div>';}
 }
 
 // ============================================================
