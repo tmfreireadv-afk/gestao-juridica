@@ -702,7 +702,7 @@ function renderDashboard() {
   document.getElementById('stat-tar-sub').textContent=tar.filter(t=>t.prioridade==='Alta').length+' de alta prioridade';
   document.getElementById('stat-processos').textContent=proc.length;
   document.getElementById('stat-proc-sub').textContent=dados.processos.length+' total';
-  document.getElementById('badge-prazos').textContent=pend.filter(p=>diasRestantes(p.vencimento)<=5).length;
+  document.getElementById('badge-prazos').textContent=pend.length;
   document.getElementById('badge-tarefas').textContent=tar.filter(t=>t.prioridade==='Alta').length;
 
   // Financeiro dashboard
@@ -763,7 +763,14 @@ function renderTable(type) {
   if(type==='audiencias') rows.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
   if(type==='reunioes')  rows.sort((a,b)=>(a.data||'').localeCompare(b.data||''));
   if(type==='tarefas')   rows.sort((a,b)=>(a.prazo||'zzz').localeCompare(b.prazo||'zzz'));
-  if(type==='receitas')  rows.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  if(type==='receitas')  rows.sort((a,b)=>{
+    // Pendente/Parcial/Inadimplente primeiro (ascendente por data), depois Recebido (descendente)
+    const pend=['Pendente','Parcial','Inadimplente'];
+    const ap=pend.includes(a.status), bp=pend.includes(b.status);
+    if(ap&&!bp) return -1; if(!ap&&bp) return 1;
+    if(ap&&bp) return (a.data||'').localeCompare(b.data||''); // mais próximo primeiro
+    return (b.data||'').localeCompare(a.data||''); // recebidos: mais recente primeiro
+  });
   if(type==='despesas')  rows.sort((a,b)=>(b.data||'').localeCompare(a.data||''));
 
   const c=cols[type];
@@ -796,7 +803,26 @@ function renderTable(type) {
       if(col.k==='observacao') return '<td style="font-size:11.5px;color:#999;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+v+'">'+v+'</td>';
       return '<td>'+v+'</td>';
     }).join('');
-    const actions='<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')">🗑</button></div></td>';
+    let actions;
+    if(type==='processos'){
+      actions='<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')" title="Editar">✏️</button></div></td>';
+    } else if(type==='receitas'){
+      const jaRecebido=row.status==='Recebido';
+      actions='<td><div class="actions">'
+        +'<button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')" title="Editar">✏️</button>'
+        +(jaRecebido?'':'<button class="btn btn-sm" style="background:#e6f4ef;color:#2e7d5e;border:1px solid #b2dcc8;" onclick="darBaixa(\'receitas\','+row.id+')" title="Dar baixa">✅</button>')
+        +'<button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')" title="Excluir">🗑</button>'
+        +'</div></td>';
+    } else if(type==='despesas'){
+      const jaPago=row.status==='Pago';
+      actions='<td><div class="actions">'
+        +'<button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')" title="Editar">✏️</button>'
+        +(jaPago?'':'<button class="btn btn-sm" style="background:#e6f4ef;color:#2e7d5e;border:1px solid #b2dcc8;" onclick="darBaixa(\'despesas\','+row.id+')" title="Dar baixa">✅</button>')
+        +'<button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')" title="Excluir">🗑</button>'
+        +'</div></td>';
+    } else {
+      actions='<td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="openEdit(\''+type+'\','+row.id+')" title="Editar">✏️</button><button class="btn btn-danger btn-sm" onclick="deleteItem(\''+type+'\','+row.id+')" title="Excluir">🗑</button></div></td>';
+    }
     const urg=type==='prazos'&&row.status==='Pendente'&&diasRestantes(row.vencimento)<=2;
     return '<tr class="'+(urg?'urgente':'')+'">'+cells+actions+'</tr>';
   }).join('');
@@ -956,6 +982,17 @@ function deleteItem(type,id){
   saveData(); renderTable(key);
   if(key==='receitas'||key==='despesas') renderFinanceiro();
   renderDashboard();
+}
+
+function darBaixa(type, id){
+  const key=typeToKey[type]||type;
+  const idx=dados[key].findIndex(r=>r.id===id);
+  if(idx<0) return;
+  const statusBaixa=type==='receitas'?'Recebido':'Pago';
+  if(!confirm('Confirmar baixa — marcar como '+statusBaixa+'?')) return;
+  dados[key][idx].status=statusBaixa;
+  saveData(); renderTable(key); renderFinanceiro(); renderDashboard();
+  toast('Baixa registrada com sucesso! ✓','success');
 }
 
 function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); editingId=null; }
