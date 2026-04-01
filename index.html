@@ -9,7 +9,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
-    --ink:#1a1a2e;--ink2:#1b3a5c;--sidebar-bg:#3a7bbf;
+    --ink:#1a1a2e;--ink2:#1b3a5c;--sidebar-bg:#d6eaf8;
     --gold:#c9a84c;--gold-light:#e8c97a;
     --cream:#f9f6ef;--cream2:#f2ede0;
     --green:#2e7d5e;--green-light:#e6f4ef;
@@ -23,37 +23,37 @@
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
 
   /* ── SIDEBAR ── */
-  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;border-right:2px solid rgba(201,168,76,0.3);}
-  .brand{padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,0.12);}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--sidebar-bg);display:flex;flex-direction:column;z-index:100;border-right:1px solid #b3d4ec;}
+  .brand{padding:28px 20px 20px;border-bottom:1px solid rgba(37,99,168,0.2);}
   .brand-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold);letter-spacing:0.3px;line-height:1.3;}
-  .brand-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
+  .brand-sub{font-size:11px;color:#5b82a0;margin-top:3px;letter-spacing:0.5px;text-transform:uppercase;}
   .nav{flex:1;padding:16px 0;overflow-y:auto;}
-  .nav-section{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:rgba(0,0,0,0.55);padding:14px 20px 6px;}
-  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#000;font-size:13.5px;font-weight:700;transition:all .15s;border-left:3px solid transparent;}
-  .nav-item:hover{color:#fff;background:rgba(0,0,0,0.15);}
-  .nav-item.active{color:#fff;background:rgba(0,0,0,0.2);border-left-color:var(--gold);font-weight:800;}
+  .nav-section{font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#5b82a0;padding:14px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:#1a2e4a;font-size:13.5px;font-weight:700;transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:#1b3a5c;background:rgba(37,99,168,0.15);}
+  .nav-item.active{color:#1b3a5c;background:rgba(37,99,168,0.22);border-left-color:var(--blue);font-weight:800;}
   .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
   .nav-item.active svg{opacity:1;}
   .nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:20px;text-align:center;}
 
   /* ── DRIVE ── */
-  .drive-status{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.1);}
+  .drive-status{padding:14px 16px;border-top:1px solid rgba(37,99,168,0.2);}
   .drive-btn{width:100%;padding:9px 12px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;transition:all .15s;}
   .drive-btn.conectar{background:var(--gold);color:var(--ink2);}
   .drive-btn.conectar:hover{background:var(--gold-light);}
   .drive-btn.conectado{background:rgba(46,125,94,0.25);color:#6fcfa8;border:1px solid rgba(111,207,168,0.3);cursor:default;}
-  .drive-user{font-size:10.5px;color:rgba(255,255,255,0.4);margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drive-user{font-size:10.5px;color:#5b82a0;margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .drive-sync-row{display:flex;gap:6px;margin-top:6px;}
-  .drive-sync-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
-  .drive-sync-btn:hover{background:rgba(255,255,255,0.14);color:#fff;}
-  .drive-sync-btn.sair{color:rgba(255,120,120,0.7);border-color:rgba(185,64,64,0.25);}
-  .drive-sync-btn.sair:hover{background:rgba(185,64,64,0.2);color:#ff9090;}
+  .drive-sync-btn{flex:1;padding:6px 8px;border-radius:6px;border:1px solid rgba(37,99,168,0.25);background:rgba(37,99,168,0.08);color:#2563a8;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s;}
+  .drive-sync-btn:hover{background:rgba(37,99,168,0.18);color:#1b3a5c;}
+  .drive-sync-btn.sair{color:#b94040;border-color:rgba(185,64,64,0.3);}
+  .drive-sync-btn.sair:hover{background:rgba(185,64,64,0.12);color:#8b0000;}
 
   .sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
   .sync-dot.ok{background:#6fcfa8;}
   .sync-dot.saving{background:var(--gold);animation:pulse 1s infinite;}
   .sync-dot.error{background:var(--red);}
-  .sync-dot.offline{background:#6a8fad;}
+  .sync-dot.offline{background:#aec6d8;}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
   /* ── MAIN ── */
@@ -280,6 +280,10 @@
       <button class="drive-sync-btn" onclick="syncDrive('download')">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
         Carregar
+      </button>
+      <button class="drive-sync-btn" onclick="recuperarTodosDados()" title="Varre todo o Drive em busca de backups">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-9-9"/><polyline points="21 3 21 9 15 9"/></svg>
+        Recuperar
       </button>
       <button class="drive-sync-btn sair" onclick="logoutGoogle()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -658,11 +662,27 @@ function setSyncStatus(s,l){ document.getElementById('sync-dot').className='sync
 // DRIVE SYNC
 // ============================================================
 async function findOrCreateFile() {
+  // Busca em appDataFolder primeiro, depois em todo o Drive (compatibilidade com versões anteriores)
   const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
-  const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id)',{headers:{Authorization:'Bearer '+accessToken}});
-  const d=await r.json();
-  if(d.files&&d.files.length>0){ driveFileId=d.files[0].id; }
-  else {
+  let foundId=null;
+  // 1. appDataFolder
+  try{
+    const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id,name)',{headers:{Authorization:'Bearer '+accessToken}});
+    const d=await r.json();
+    if(d.files&&d.files.length>0) foundId=d.files[0].id;
+  }catch(e){}
+  // 2. Se não achou, busca em todo o Drive (arquivos salvos por versões anteriores)
+  if(!foundId){
+    try{
+      const r2=await fetch('https://www.googleapis.com/drive/v3/files?q='+q+'&fields=files(id,name)',{headers:{Authorization:'Bearer '+accessToken}});
+      const d2=await r2.json();
+      if(d2.files&&d2.files.length>0) foundId=d2.files[0].id;
+    }catch(e){}
+  }
+  if(foundId){
+    driveFileId=foundId;
+  } else {
+    // Cria novo arquivo
     const cr=await fetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify({name:DRIVE_FILE_NAME,parents:['appDataFolder']})});
     driveFileId=(await cr.json()).id;
   }
@@ -686,11 +706,19 @@ async function syncDrive(dir,silent=false) {
         const t=await r.text();
         if(t&&t.trim().startsWith('{')){
           const parsed=JSON.parse(t);
-          dados={prazos:[],audiencias:[],reunioes:[],processos:[],tarefas:[],receitas:[],despesas:[],...parsed};
+          // Merge: Drive tem prioridade, mas mantém chaves locais que não existam no Drive
+          const base={prazos:[],audiencias:[],reunioes:[],processos:[],tarefas:[],receitas:[],despesas:[]};
+          dados=Object.assign(base, dados, parsed);
+          // Garante que arrays existam
+          ['prazos','audiencias','reunioes','processos','tarefas','receitas','despesas'].forEach(k=>{if(!Array.isArray(dados[k]))dados[k]=[];});
           saveLocal(); renderDashboard(); setSyncStatus('ok','Carregado do Drive');
           if(!silent) toast('Dados carregados do Drive ✓','success');
-        } else { await syncDrive('upload',true); }
-      } else { setSyncStatus('error','Erro'); if(!silent) toast('Erro ao carregar.','error'); }
+        } else {
+          // Arquivo vazio no Drive — envia dados locais
+          setSyncStatus('saving','Enviando dados locais…');
+          await syncDrive('upload',true);
+        }
+      } else { setSyncStatus('error','Erro'); if(!silent) toast('Erro ao carregar. Tente novamente.','error'); }
     }
   } catch(e){ setSyncStatus('error','Erro'); if(!silent) toast('Erro: '+e.message,'error'); }
 }
@@ -1227,6 +1255,56 @@ async function buscarIntimacoes(){
       return '<div class="gmail-item"><div class="gmail-assunto">'+subj+'</div><div class="gmail-meta">'+from+' &nbsp;|&nbsp; '+dt+'</div><div class="gmail-snippet">'+snip+'</div></div>';
     }).join('');
   }catch(e){el.innerHTML='<div class="empty-state"><p>Erro ao buscar Gmail: '+e.message+'</p></div>';}
+}
+
+
+// ============================================================
+// RECUPERAÇÃO DE DADOS DO DRIVE
+// ============================================================
+async function recuperarTodosDados(){
+  if(!accessToken){ toast('Conecte o Google Drive primeiro.','info'); return; }
+  toast('Buscando todos os arquivos no Drive…','info');
+  setSyncStatus('saving','Recuperando…');
+  try{
+    // Busca todos os arquivos com esse nome em qualquer lugar
+    const q=encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+    const spaces=['appDataFolder','drive'];
+    let allFiles=[];
+    for(const sp of spaces){
+      try{
+        const r=await fetch('https://www.googleapis.com/drive/v3/files?spaces='+sp+'&q='+q+'&fields=files(id,name,modifiedTime)',{headers:{Authorization:'Bearer '+accessToken}});
+        const d=await r.json();
+        if(d.files) allFiles.push(...d.files);
+      }catch(e){}
+    }
+    if(!allFiles.length){ toast('Nenhum arquivo de backup encontrado.','error'); setSyncStatus('error','Sem backup'); return; }
+    // Ordena pelo mais recente
+    allFiles.sort((a,b)=>new Date(b.modifiedTime)-new Date(a.modifiedTime));
+    let melhor=null, melhorScore=0;
+    for(const f of allFiles){
+      try{
+        const r=await fetch('https://www.googleapis.com/drive/v3/files/'+f.id+'?alt=media',{headers:{Authorization:'Bearer '+accessToken}});
+        if(!r.ok) continue;
+        const t=await r.text();
+        if(!t||!t.trim().startsWith('{')) continue;
+        const parsed=JSON.parse(t);
+        const score=['prazos','audiencias','reunioes','processos','tarefas','receitas','despesas'].reduce((s,k)=>s+(Array.isArray(parsed[k])?parsed[k].length:0),0);
+        if(score>melhorScore){ melhorScore=score; melhor=parsed; driveFileId=f.id; }
+      }catch(e){}
+    }
+    if(melhor&&melhorScore>0){
+      const base={prazos:[],audiencias:[],reunioes:[],processos:[],tarefas:[],receitas:[],despesas:[]};
+      dados=Object.assign(base,melhor);
+      saveLocal();
+      localStorage.setItem('gestao_juridica_meta',JSON.stringify({fileId:driveFileId,email:userEmail}));
+      renderDashboard();
+      setSyncStatus('ok','Recuperado ✓');
+      toast('Recuperados '+melhorScore+' registros do Drive! ✓','success');
+    } else {
+      toast('Arquivos encontrados mas sem dados válidos.','error');
+      setSyncStatus('error','Sem dados');
+    }
+  }catch(e){ setSyncStatus('error','Erro'); toast('Erro: '+e.message,'error'); }
 }
 
 // ============================================================
