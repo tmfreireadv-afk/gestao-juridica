@@ -259,6 +259,10 @@ textarea.form-control{resize:vertical;min-height:68px;}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Intimacoes Gmail
     </div>
+    <div class="nav-item" onclick="showView('analisador',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+      Analisador IA
+    </div>
     <div class="nav-section">Controle</div>
     <div class="nav-item" onclick="showView('processos',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
@@ -317,6 +321,11 @@ textarea.form-control{resize:vertical;min-height:68px;}
         <div class="stat-card despesa"><div class="stat-label">Despesas (mes)</div><div class="stat-number negativo" id="dash-despesa-mes">R$ 0</div><div class="stat-sub" id="dash-despesa-sub">-</div></div>
         <div class="stat-card saldo"><div class="stat-label">Saldo (mes)</div><div class="stat-number" id="dash-saldo-mes">R$ 0</div><div class="stat-sub">receitas - despesas</div></div>
         <div class="stat-card saldo"><div class="stat-label">A Receber</div><div class="stat-number" id="dash-a-receber">R$ 0</div><div class="stat-sub">honorarios pendentes</div></div>
+      </div>
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+        <div class="stat-card despesa"><div class="stat-label">Inadimplentes</div><div class="stat-number negativo" id="dash-inadimplente-count">0</div><div class="stat-sub" id="dash-inadimplente-sub">clientes em atraso</div></div>
+        <div class="stat-card despesa"><div class="stat-label">Valor Inadimplente</div><div class="stat-number negativo" id="dash-inadimplente-valor">R$ 0,00</div><div class="stat-sub">total em aberto</div></div>
+        <div class="stat-card saldo"><div class="stat-label">Maior Inadimplente</div><div class="stat-number" id="dash-inadimplente-maior" style="font-size:16px;margin-top:8px;">-</div><div class="stat-sub" id="dash-inadimplente-maior-val">-</div></div>
       </div>
       <div class="agenda-hoje">
         <div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Agenda de Hoje</div>
@@ -924,7 +933,7 @@ function toast(msg,type) {
 // ============================================================
 // NAVIGATION
 // ============================================================
-var titles={dashboard:'Dashboard',agenda_mes:'Agenda do Mes',prazos:'Prazos Processuais',audiencias:'Audiencias',reunioes:'Reunioes & Atendimentos',intimacoes:'Intimacoes Gmail',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro'};
+var titles={dashboard:'Dashboard',agenda_mes:'Agenda do Mes',prazos:'Prazos Processuais',audiencias:'Audiencias',reunioes:'Reunioes & Atendimentos',intimacoes:'Intimacoes Gmail',analisador:'Analisador de Intimacoes',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro'};
 
 function showView(name,el) {
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
@@ -936,6 +945,7 @@ function showView(name,el) {
   else if(name==='financeiro') renderFinanceiro();
   else if(name==='agenda_mes') renderAgendaMes();
   else if(name==='intimacoes') buscarIntimacoes();
+  else if(name==='analisador') { /* just show view */ }
   else renderTable(name);
 }
 
@@ -992,6 +1002,25 @@ function renderDashboard() {
   sEl.textContent=fmtBRL(saldoM);
   sEl.className='stat-number '+(saldoM>=0?'positivo':'negativo');
   document.getElementById('dash-a-receber').textContent=fmtBRL(aReceber);
+
+  // Inadimplentes
+  var inadimplentes=dados.receitas.filter(function(r){return r.status==='Inadimplente';});
+  var clientesInad=[...new Set(inadimplentes.map(function(r){return r.cliente;}))];
+  var valorInad=inadimplentes.reduce(function(s,r){return s+(parseFloat(r.valor)||0);},0);
+  document.getElementById('dash-inadimplente-count').textContent=clientesInad.length;
+  document.getElementById('dash-inadimplente-sub').textContent=inadimplentes.length+' lancamento(s) inadimplente(s)';
+  document.getElementById('dash-inadimplente-valor').textContent=fmtBRL(valorInad);
+  if(clientesInad.length>0){
+    // Acha o cliente com maior valor inadimplente
+    var porCliente={};
+    inadimplentes.forEach(function(r){ porCliente[r.cliente]=(porCliente[r.cliente]||0)+(parseFloat(r.valor)||0); });
+    var maiorCliente=Object.keys(porCliente).sort(function(a,b){return porCliente[b]-porCliente[a];})[0];
+    document.getElementById('dash-inadimplente-maior').textContent=maiorCliente;
+    document.getElementById('dash-inadimplente-maior-val').textContent=fmtBRL(porCliente[maiorCliente]);
+  } else {
+    document.getElementById('dash-inadimplente-maior').textContent='-';
+    document.getElementById('dash-inadimplente-maior-val').textContent='Nenhum inadimplente';
+  }
 
   // Agenda hoje - apenas pendentes/ativos
   var h=hoje();
@@ -1099,12 +1128,15 @@ function buscarIntimacoes() {
   }
   var el=document.getElementById('gmail-lista');
   el.innerHTML='<div class="empty-state"><p>Buscando intimacoes no Gmail...</p></div>';
-  var query=encodeURIComponent('subject:(intimacao OR intimacao OR despacho OR sentenca OR citacao OR publicacao) newer_than:30d');
+  // Remetentes juridicos especificos + termos no assunto
+  var termosAssunto='subject:(intimacao OR despacho OR sentenca OR citacao OR publicacao OR mandado OR notificacao OR peticao OR recurso OR acordao OR decisao OR ato OR edital OR "diario de justica" OR "publicacoes online" OR PUSH)';
+  var remetentesJuridicos='from:(suporte@publicacoesonline.com.br OR naoresponda.pje.push38@trf1.jus.br OR naoresponda.pje.push40@trf1.jus.br OR nao-responda@trt5.jus.br OR pje.jus.br OR tjba.jus.br OR trt5.jus.br OR stj.jus.br OR stf.jus.br OR trf1.jus.br OR jus.br)';
+  var query=encodeURIComponent('('+termosAssunto+' OR '+remetentesJuridicos+') newer_than:90d');
   fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q='+query+'&maxResults=20',{headers:{Authorization:'Bearer '+accessToken}})
     .then(function(r){return r.json();})
     .then(function(data) {
       if (!data.messages||!data.messages.length) { el.innerHTML='<div class="empty-state"><p>Nenhuma intimacao encontrada nos ultimos 30 dias.</p></div>'; return; }
-      var promises=data.messages.slice(0,15).map(function(m) {
+      var promises=data.messages.slice(0,20).map(function(m) {
         return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',{headers:{Authorization:'Bearer '+accessToken}}).then(function(r){return r.json();});
       });
       return Promise.all(promises).then(function(msgs) {
@@ -1116,7 +1148,14 @@ function buscarIntimacoes() {
           return '<div class="gmail-item"><div class="gmail-assunto">'+subj+'</div><div class="gmail-meta">'+from+' | '+dt+'</div><div class="gmail-snippet">'+(m.snippet||'')+'</div></div>';
         }).join('');
       });
-    }).catch(function(e){el.innerHTML='<div class="empty-state"><p>Erro: '+e.message+'</p></div>';});
+    }).catch(function(e){
+      var msg=e.message||'';
+      var hint='';
+      if(msg.indexOf('401')>=0||msg.indexOf('403')>=0) hint=' Tente clicar em Atualizar novamente para reautorizar.';
+      if(msg.indexOf('400')>=0) hint=' Permissao do Gmail necessaria. Clique em Atualizar.';
+      el.innerHTML='<div class="empty-state"><p>Erro ao acessar Gmail: '+msg+hint+'</p></div>';
+      gmailAutorizado=false;
+    });
 }
 
 // ============================================================
@@ -1152,7 +1191,7 @@ var cols={
   prazos:[{k:'descricao',l:'Descricao'},{k:'processo',l:'No Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   audiencias:[{k:'descricao',l:'Descricao'},{k:'processo',l:'No Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente/Parte'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
-  processos:[{k:'numero',l:'No Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contraria'},{k:'polo',l:'Polo'},{k:'area',l:'Area'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juizo'},{k:'comarca',l:'Comarca'},{k:'tipo_acao',l:'Tipo de Acao'},{k:'fase',l:'Fase'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
+  processos:[{k:'numero',l:'No Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contraria'},{k:'polo',l:'Polo'},{k:'area',l:'Area'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juizo'},{k:'comarca',l:'Comarca'},{k:'tipo_acao',l:'Tipo de Acao'},{k:'fase',l:'Fase'},{k:'status',l:'Status'}],
   tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descricao'},{k:'cliente',l:'Cliente'},{k:'processo',l:'Processo'},{k:'tipo',l:'Tipo'},{k:'recorrente',l:'Recorrencia'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
   despesas:[{k:'data',l:'Data'},{k:'descricao',l:'Descricao'},{k:'fornecedor',l:'Fornecedor'},{k:'categoria',l:'Categoria'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs.'}],
@@ -1275,7 +1314,6 @@ var modalForms={
     {n:'tipo_acao',l:'Tipo de Acao',type:'text'},
     {n:'fase',l:'Fase',type:'select',opts:['Conhecimento','Recursal','Execucao','Arquivado']},
     {n:'status',l:'Status',type:'select',opts:['Ativo','Suspenso','Arquivado','Extinto']},
-    {n:'observacao',l:'Observacoes',type:'textarea',full:true},
   ]},
   tarefa:{title:'Nova Tarefa',fields:[
     {n:'descricao',l:'Descricao',type:'text',full:true,req:true},
@@ -1405,7 +1443,7 @@ function exportarExcel() {
   [{name:'Prazos',data:dados.prazos,cols:['descricao','processo','cliente','tribunal','vencimento','tipo','status','observacao'],headers:['Descricao','No Processo','Cliente','Tribunal','Vencimento','Tipo','Status','Observacoes']},
    {name:'Audiencias',data:dados.audiencias,cols:['descricao','processo','cliente','data','hora','local','tipo','status','observacao'],headers:['Descricao','No Processo','Cliente','Data','Hora','Local','Tipo','Status','Observacoes']},
    {name:'Reunioes',data:dados.reunioes,cols:['tipo','cliente','data','hora','local','assunto','status','observacao'],headers:['Tipo','Cliente','Data','Hora','Local','Assunto','Status','Observacoes']},
-   {name:'Processos',data:dados.processos,cols:['numero','cliente','parte_contraria','polo','area','tribunal','vara','comarca','tipo_acao','fase','status','observacao'],headers:['No Processo','Cliente','Parte Contraria','Polo','Area','Tribunal','Vara/Juizo','Comarca','Tipo de Acao','Fase','Status','Observacoes']},
+   {name:'Processos',data:dados.processos,cols:['numero','cliente','parte_contraria','polo','area','tribunal','vara','comarca','tipo_acao','fase','status'],headers:['No Processo','Cliente','Parte Contraria','Polo','Area','Tribunal','Vara/Juizo','Comarca','Tipo de Acao','Fase','Status']},
    {name:'Tarefas',data:dados.tarefas,cols:['descricao','processo','cliente','prazo','prioridade','status','observacao'],headers:['Tarefa','No Processo','Cliente','Prazo','Prioridade','Status','Observacoes']},
    {name:'Receitas',data:dados.receitas,cols:['data','descricao','cliente','processo','tipo','valor','status','observacao'],headers:['Data','Descricao','Cliente','Processo','Tipo','Valor','Status','Observacoes']},
    {name:'Despesas',data:dados.despesas,cols:['data','descricao','fornecedor','categoria','valor','status','observacao'],headers:['Data','Descricao','Fornecedor','Categoria','Valor','Status','Observacoes']},
@@ -1431,6 +1469,228 @@ function exportarExcel() {
   ws0['!cols']=[{wch:30},{wch:15},{wch:15}];
   XLSX.utils.book_append_sheet(wb,ws0,'Resumo');
   XLSX.writeFile(wb,'gestao_juridica_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+
+// ============================================================
+// ANALISADOR DE INTIMACOES COM IA
+// ============================================================
+var historicoAnalises = [];
+
+function analisarIntimacao() {
+  var texto = document.getElementById('analisador-texto').value.trim();
+  if (!texto) { toast('Cole o texto da intimacao antes de analisar.','info'); return; }
+
+  var btn = document.getElementById('btn-analisar');
+  var status = document.getElementById('analisador-status');
+  btn.disabled = true;
+  btn.textContent = 'Analisando...';
+  status.textContent = 'A IA esta lendo o documento...';
+
+  // Monta lista de processos cadastrados para contexto
+  var processosCadastrados = dados.processos.map(function(p) {
+    return p.numero + (p.cliente ? ' (' + p.cliente + ')' : '');
+  }).join(', ');
+
+  var prompt = `Voce e um assistente juridico especializado em processo civil e trabalhista brasileiro.
+
+Analise o texto abaixo de uma intimacao/publicacao judicial e extraia as informacoes em formato JSON estrito.
+
+PROCESSOS JA CADASTRADOS NO SISTEMA (use para identificar o processo):
+` + (processosCadastrados || 'Nenhum cadastrado') + `
+
+TEXTO DA INTIMACAO:
+` + texto + `
+
+Retorne SOMENTE um objeto JSON valido, sem markdown, sem explicacoes, com esta estrutura exata:
+{
+  "tipo_documento": "Intimacao | Despacho | Sentenca | Acordao | Citacao | Publicacao DJe | Notificacao | Outro",
+  "numero_processo": "numero CNJ se encontrado, senao vazio",
+  "partes": { "autor": "nome ou vazio", "reu": "nome ou vazio" },
+  "vara_tribunal": "nome da vara/tribunal ou vazio",
+  "comarca": "comarca ou vazio",
+  "data_publicacao": "YYYY-MM-DD ou vazio",
+  "resumo": "resumo objetivo em 2-3 frases do que determina o ato",
+  "urgencia": "Alta | Media | Baixa",
+  "requer_acao": true,
+  "acoes_sugeridas": [
+    {
+      "modulo": "prazo | audiencia | tarefa",
+      "descricao": "descricao clara da acao a tomar",
+      "data_limite": "YYYY-MM-DD ou vazio",
+      "hora": "HH:MM ou vazio",
+      "local": "local se audiencia, senao vazio",
+      "tipo": "tipo especifico do prazo/audiencia/tarefa"
+    }
+  ],
+  "observacoes": "informacoes adicionais relevantes ou vazio"
+}`;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    btn.disabled = false;
+    btn.textContent = 'Analisar com IA';
+    status.textContent = '';
+
+    var raw = data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
+    if (!raw) { toast('Resposta vazia da IA. Tente novamente.','error'); return; }
+
+    // Limpa markdown se houver
+    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
+    var resultado;
+    try { resultado = JSON.parse(raw); }
+    catch(e) {
+      toast('Erro ao interpretar resposta da IA.','error');
+      document.getElementById('analisador-resultado').style.display='block';
+      document.getElementById('analisador-resultado-content').innerHTML='<pre style="font-size:12px;white-space:pre-wrap;color:#555;">'+raw+'</pre>';
+      return;
+    }
+
+    exibirResultadoAnalise(resultado, texto);
+    adicionarAoHistorico(resultado, texto);
+  })
+  .catch(function(e) {
+    btn.disabled = false;
+    btn.textContent = 'Analisar com IA';
+    status.textContent = '';
+    toast('Erro de conexao com a IA: ' + e.message,'error');
+  });
+}
+
+function exibirResultadoAnalise(r, textoOriginal) {
+  var urgCor = r.urgencia==='Alta'?'var(--red)':r.urgencia==='Media'?'var(--amber)':'var(--green)';
+  var urgBg  = r.urgencia==='Alta'?'var(--red-light)':r.urgencia==='Media'?'var(--amber-light)':'var(--green-light)';
+
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">';
+  html += '<div class="diag-bloco azul"><div class="form-label">Tipo de Documento</div><div style="font-size:14px;font-weight:700;margin-top:4px;">'+( r.tipo_documento||'-')+'</div></div>';
+  html += '<div style="border-radius:7px;padding:10px 13px;margin-bottom:7px;border:1px solid '+urgCor+'40;background:'+urgBg+';"><div class="form-label">Urgencia</div><div style="font-size:14px;font-weight:700;color:'+urgCor+';margin-top:4px;">'+(r.urgencia||'-')+'</div></div>';
+  html += '</div>';
+
+  if (r.numero_processo) {
+    html += '<div class="diag-bloco azul" style="margin-bottom:12px;">';
+    html += '<div class="form-label">Processo</div>';
+    html += '<div style="font-size:13.5px;font-weight:700;margin-top:3px;">'+r.numero_processo+'</div>';
+    if (r.vara_tribunal) html += '<div style="font-size:12px;color:#666;margin-top:2px;">'+r.vara_tribunal+(r.comarca?' - '+r.comarca:'')+'</div>';
+    if (r.partes&&(r.partes.autor||r.partes.reu)) html += '<div style="font-size:12px;color:#888;margin-top:2px;">'+[r.partes.autor?'Autor: '+r.partes.autor:'',r.partes.reu?'Reu: '+r.partes.reu:''].filter(Boolean).join(' | ')+'</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="diag-bloco cinza" style="margin-bottom:16px;">';
+  html += '<div class="form-label">Resumo</div>';
+  html += '<div style="font-size:13px;margin-top:5px;line-height:1.7;">'+( r.resumo||'-')+'</div>';
+  if (r.observacoes) html += '<div style="font-size:12px;color:#888;margin-top:6px;">'+r.observacoes+'</div>';
+  html += '</div>';
+
+  if (r.acoes_sugeridas && r.acoes_sugeridas.length > 0) {
+    html += '<div class="form-label" style="margin-bottom:8px;">ACOES SUGERIDAS</div>';
+    r.acoes_sugeridas.forEach(function(a, i) {
+      var modCorBg = a.modulo==='prazo'?'var(--red-light)':a.modulo==='audiencia'?'var(--blue-light)':'var(--green-light)';
+      var modCor   = a.modulo==='prazo'?'var(--red)':a.modulo==='audiencia'?'var(--blue)':'var(--green)';
+      html += '<div style="border:1px solid '+modCor+'40;background:'+modCorBg+';border-radius:8px;padding:13px;margin-bottom:10px;">';
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">';
+      html += '<span style="background:'+modCor+';color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;">'+a.modulo+'</span>';
+      html += '<span style="font-weight:700;font-size:13.5px;">'+a.descricao+'</span>';
+      html += '</div>';
+      if (a.data_limite) html += '<div style="font-size:12px;color:'+modCor+';">Data limite: <strong>'+fmtDate(a.data_limite)+'</strong>'+(a.hora?' - '+a.hora:'')+'</div>';
+      if (a.local) html += '<div style="font-size:12px;color:#666;">Local: '+a.local+'</div>';
+      html += '<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="lancarAcao('+i+')">+ Lancar no Sistema</button>';
+      html += '</div>';
+    });
+    // Store result temporarily for lancamento
+    window._ultimaAnalise = r;
+  }
+
+  html += '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--cream2);display:flex;gap:8px;">';
+  html += '<button class="btn btn-gold" onclick="lancarTodasAcoes()">+ Lancar Todas as Acoes</button>';
+  html += '</div>';
+
+  document.getElementById('analisador-resultado').style.display='block';
+  document.getElementById('analisador-resultado-content').innerHTML=html;
+  document.getElementById('analisador-resultado').scrollIntoView({behavior:'smooth'});
+}
+
+function lancarAcao(idx) {
+  var r = window._ultimaAnalise;
+  if (!r||!r.acoes_sugeridas||!r.acoes_sugeridas[idx]) return;
+  var a = r.acoes_sugeridas[idx];
+  lancarItemNoSistema(a, r);
+  toast('Lancado em ' + a.modulo + '!', 'success');
+}
+
+function lancarTodasAcoes() {
+  var r = window._ultimaAnalise;
+  if (!r||!r.acoes_sugeridas||!r.acoes_sugeridas.length) return;
+  r.acoes_sugeridas.forEach(function(a) { lancarItemNoSistema(a, r); });
+  toast(r.acoes_sugeridas.length + ' item(ns) lancado(s) no sistema!', 'success');
+  saveData(); renderDashboard();
+}
+
+function lancarItemNoSistema(a, r) {
+  var proc = r.numero_processo||'';
+  var cliente = r.partes&&r.partes.autor ? r.partes.autor : (r.partes&&r.partes.reu?r.partes.reu:'');
+  var obs = r.resumo||'';
+
+  if (a.modulo === 'prazo') {
+    var maxId = dados.prazos.length ? Math.max.apply(null,dados.prazos.map(function(x){return x.id;})) : 0;
+    dados.prazos.push({
+      id: maxId+1,
+      descricao: a.descricao,
+      processo: proc,
+      cliente: cliente,
+      tribunal: r.vara_tribunal||'',
+      vencimento: a.data_limite||'',
+      tipo: a.tipo||'Processual',
+      status: 'Pendente',
+      observacao: obs
+    });
+  } else if (a.modulo === 'audiencia') {
+    var maxId = dados.audiencias.length ? Math.max.apply(null,dados.audiencias.map(function(x){return x.id;})) : 0;
+    dados.audiencias.push({
+      id: maxId+1,
+      descricao: a.descricao,
+      processo: proc,
+      cliente: cliente,
+      data: a.data_limite||'',
+      hora: a.hora||'',
+      local: a.local||(r.vara_tribunal||''),
+      tipo: a.tipo||'Outro',
+      status: 'Agendada',
+      observacao: obs
+    });
+  } else {
+    var maxId = dados.tarefas.length ? Math.max.apply(null,dados.tarefas.map(function(x){return x.id;})) : 0;
+    dados.tarefas.push({
+      id: maxId+1,
+      descricao: a.descricao,
+      processo: proc,
+      cliente: cliente,
+      prazo: a.data_limite||'',
+      prioridade: r.urgencia==='Alta'?'Alta':r.urgencia==='Media'?'Media':'Baixa',
+      status: 'Pendente',
+      observacao: obs
+    });
+  }
+  saveData();
+}
+
+function adicionarAoHistorico(r, texto) {
+  historicoAnalises.unshift({r:r, texto:texto.substring(0,120)+'...', data:new Date().toLocaleString('pt-BR')});
+  var hEl = document.getElementById('analisador-historico');
+  hEl.innerHTML = historicoAnalises.map(function(h, i) {
+    return '<div style="border-bottom:1px solid var(--cream2);padding:9px 0;">'
+      +'<div style="font-size:12.5px;font-weight:600;">'+h.r.tipo_documento+' — '+( h.r.numero_processo||'sem numero')+' <span style="font-size:11px;color:#aaa;font-weight:400;">'+h.data+'</span></div>'
+      +'<div style="font-size:11.5px;color:#888;margin-top:2px;">'+h.r.resumo.substring(0,120)+'...</div>'
+      +'</div>';
+  }).join('');
 }
 
 // ============================================================
