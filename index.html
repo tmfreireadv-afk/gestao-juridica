@@ -395,110 +395,74 @@ textarea.form-control{resize:vertical;min-height:68px;}
       </div>
     </div>
 
+    
     <!-- INTIMACOES -->
     <div id="view-intimacoes" class="view">
       <div class="table-container" style="margin-bottom:18px;">
         <div class="table-toolbar">
           <div style="flex:1;font-family:'Playfair Display',serif;font-size:15px;font-weight:600;">Intimacoes recebidas no Gmail</div>
-          <button class="btn btn-primary" onclick="buscarIntimacoes()">&#8635; Atualizar</button>
+          <button class="btn btn-primary" onclick="buscarIntimacoes()" id="btn-buscar-gmail-top">&#8635; Buscar</button>
         </div>
         <div style="padding:12px 16px;background:#eef4fc;border-bottom:1px solid var(--cream2);">
           <div style="font-size:12px;color:#1b3a5c;margin-bottom:8px;line-height:1.6;">
-            <strong>Antes de usar:</strong> No Google Cloud Console, adicione o escopo
-            <code style="background:#dde;padding:1px 5px;border-radius:3px;">Gmail API (gmail.readonly)</code>
-            na tela de consentimento OAuth do seu projeto. Depois clique em Autorizar.
+            <strong>Passo 1:</strong> Clique em <strong>"1. Autorizar Gmail"</strong> para dar permissao.
+            <strong>Passo 2:</strong> Clique em <strong>"2. Buscar"</strong> para baixar as intimacoes.<br>
+            Cada e-mail tem um botao <strong>"Abrir + Analisar"</strong> para ver o conteudo completo e enviar ao Analisador IA.
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <button class="btn btn-primary" id="btn-autorizar-gmail" onclick="autorizarGmail()" style="background:#2563a8;font-size:12px;">&#9993; 1. Autorizar Gmail</button>
             <button class="btn btn-primary" onclick="buscarIntimacoes()" id="btn-buscar-gmail" style="opacity:0.5;font-size:12px;" disabled>&#8635; 2. Buscar Intimacoes</button>
-            <div id="gmail-status-msg" style="font-size:11.5px;color:#888;align-self:center;"></div>
+            <div id="gmail-status-msg" style="font-size:11.5px;color:#666;"></div>
           </div>
         </div>
       </div>
-      <div id="gmail-lista"><div class="empty-state"><p>Clique em "Atualizar" para buscar as intimacoes.</p></div></div>
+      <div id="gmail-lista"><div class="empty-state"><p>Clique em "1. Autorizar Gmail" e depois "2. Buscar Intimacoes".</p></div></div>
     </div>
 
-    <!-- PROCESSOS -->
-    <div id="view-processos" class="view">
-      <div class="table-container">
+    <!-- ANALISADOR DE INTIMACOES -->
+    <div id="view-analisador" class="view">
+      <div class="table-container" style="margin-bottom:18px;">
         <div class="table-toolbar">
-          <input class="search-input" placeholder="Buscar no processo, cliente, vara..." oninput="renderTable('processos')">
-          <button class="btn btn-primary" onclick="openModal('processo')">+ Novo Processo</button>
-          <button class="btn btn-ghost" onclick="imprimirTabela('processos')">&#128438; Imprimir</button>
+          <div style="flex:1;font-family:'Playfair Display',serif;font-size:16px;font-weight:600;">Analisador de Intimacoes</div>
         </div>
-        <div class="filter-row">
-          <span class="filter-label">Area:</span>
-          <select onchange="renderTable('processos')"><option value="">Todas</option><option>Civel</option><option>Trabalhista</option><option>Consumidor</option><option>Familia</option><option>Imobiliario</option><option>Previdenciario</option></select>
-          <span class="filter-label">Fase:</span>
-          <select onchange="renderTable('processos')"><option value="">Todas</option><option>Conhecimento</option><option>Recursal</option><option>Execucao</option><option>Arquivado</option></select>
+        <div style="padding:14px 18px;font-size:12.5px;color:#555;border-bottom:1px solid var(--cream2);line-height:1.7;background:#f9f6ef;">
+          Cole abaixo o texto de uma intimacao, despacho, sentenca ou publicacao. O sistema identifica automaticamente processo, prazo, tipo de ato e sugere o lancamento correto.
+          Voce tambem pode usar o botao <strong>"Abrir + Analisar"</strong> diretamente em qualquer e-mail da aba Intimacoes.
         </div>
-        <div id="table-processos"></div>
-      </div>
-    </div>
-
-    <!-- TAREFAS -->
-    <div id="view-tarefas" class="view">
-      <div class="table-container">
-        <div class="table-toolbar">
-          <input class="search-input" placeholder="Buscar tarefa..." oninput="renderTable('tarefas')">
-          <button class="btn btn-primary" onclick="openModal('tarefa')">+ Nova Tarefa</button>
-          <button class="btn btn-ghost" onclick="imprimirTabela('tarefas')">&#128438; Imprimir</button>
+        <div style="padding:16px 18px;">
+          <div style="margin-bottom:12px;">
+            <label class="form-label" style="display:block;margin-bottom:6px;">Texto da Intimacao / Publicacao</label>
+            <textarea id="analisador-texto" class="form-control" style="min-height:180px;width:100%;font-size:13px;" placeholder="Cole aqui o texto completo da intimacao, despacho, sentenca, publicacao do DJe, e-mail do PJe, Publicacoes Online, TRT..."></textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="analisarIntimacao()" id="btn-analisar">
+              &#128269; Analisar
+            </button>
+            <button class="btn btn-ghost" onclick="document.getElementById('analisador-texto').value=''">Limpar</button>
+            <span id="analisador-status" style="font-size:12px;color:#888;"></span>
+          </div>
         </div>
-        <div class="filter-row">
-          <span class="filter-label">Prioridade:</span>
-          <select onchange="renderTable('tarefas')"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baixa</option></select>
-          <span class="filter-label">Status:</span>
-          <select onchange="renderTable('tarefas')"><option value="">Todas</option><option>Pendente</option><option>Em andamento</option><option>Concluida</option></select>
-        </div>
-        <div id="table-tarefas"></div>
       </div>
-    </div>
-
-    <!-- FINANCEIRO -->
-    <div id="view-financeiro" class="view">
-      <div class="fin-resumo">
-        <div class="fin-card r"><div class="fin-card-label">Total Receitas</div><div class="fin-card-value pos" id="fin-total-receitas">R$ 0,00</div><div class="fin-card-sub" id="fin-receitas-count">0 lancamentos</div></div>
-        <div class="fin-card d"><div class="fin-card-label">Total Despesas</div><div class="fin-card-value neg" id="fin-total-despesas">R$ 0,00</div><div class="fin-card-sub" id="fin-despesas-count">0 lancamentos</div></div>
-        <div class="fin-card s"><div class="fin-card-label">Saldo Geral</div><div class="fin-card-value neu" id="fin-saldo">R$ 0,00</div><div class="fin-card-sub" id="fin-saldo-sub">receitas - despesas</div></div>
-      </div>
-      <div class="fin-tabs">
-        <button class="fin-tab active" id="tab-receitas" onclick="switchFinTab('receitas')">&#128176; Receitas / Honorarios</button>
-        <button class="fin-tab" id="tab-despesas" onclick="switchFinTab('despesas')">&#128184; Despesas</button>
-      </div>
-      <div id="fin-view-receitas">
+      <div id="analisador-resultado" style="display:none;">
         <div class="table-container">
           <div class="table-toolbar">
-            <input class="search-input" placeholder="Buscar receita, cliente, processo..." oninput="renderTable('receitas')">
-            <button class="btn btn-primary" onclick="openModal('receita')">+ Nova Receita</button>
+            <div style="flex:1;font-family:'Playfair Display',serif;font-size:15px;font-weight:600;">Resultado da Analise</div>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('analisador-resultado').style.display='none'">Fechar</button>
           </div>
-          <div class="filter-row">
-            <span class="filter-label">Status:</span>
-            <select onchange="renderTable('receitas')"><option value="">Todos</option><option>Recebido</option><option>Pendente</option><option>Parcial</option><option>Inadimplente</option></select>
-            <span class="filter-label">Tipo:</span>
-            <select onchange="renderTable('receitas')"><option value="">Todos</option><option>Honorarios Contratuais</option><option>Honorarios Exito</option><option>Assessoria Mensal</option><option>Consulta</option><option>Outros</option></select>
-          </div>
-          <div id="table-receitas"></div>
+          <div id="analisador-resultado-content" style="padding:16px 18px;"></div>
         </div>
       </div>
-      <div id="fin-view-despesas" style="display:none">
+      <div style="margin-top:20px;">
         <div class="table-container">
-          <div class="table-toolbar">
-            <input class="search-input" placeholder="Buscar despesa, fornecedor..." oninput="renderTable('despesas')">
-            <button class="btn btn-primary" onclick="openModal('despesa')">+ Nova Despesa</button>
+          <div class="table-toolbar" style="border-bottom:none;">
+            <div style="font-family:'Playfair Display',serif;font-size:14px;font-weight:600;">Historico desta Sessao</div>
           </div>
-          <div class="filter-row">
-            <span class="filter-label">Categoria:</span>
-            <select onchange="renderTable('despesas')"><option value="">Todas</option><option>Aluguel</option><option>Pessoal</option><option>Custas Processuais</option><option>Marketing</option><option>TI / Software</option><option>Telefone / Internet</option><option>Materiais</option><option>Outros</option></select>
-            <span class="filter-label">Status:</span>
-            <select onchange="renderTable('despesas')"><option value="">Todos</option><option>Pago</option><option>Pendente</option><option>Vencido</option></select>
+          <div id="analisador-historico" style="padding:10px 18px 16px;">
+            <p style="font-size:12.5px;color:#bbb;">Nenhuma analise realizada ainda.</p>
           </div>
-          <div id="table-despesas"></div>
         </div>
       </div>
     </div>
-
-  </div>
-</main>
 
 <!-- MODAL FORMULARIO -->
 <div class="modal-overlay" id="modal-overlay">
@@ -546,7 +510,7 @@ var CLIENT_ID = '930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleuserco
 var SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly';
 var SCOPES_GMAIL = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/gmail.readonly';
 var DRIVE_FILE_NAME = 'gestao_juridica_dados.json';
-var tokenClient = null, accessToken = null, driveFileId = null, userEmail = '', syncTimeout = null, gmailAutorizado = false, gmailToken = null;
+var tokenClient = null, accessToken = null, driveFileId = null, userEmail = '', syncTimeout = null, gmailAutorizado = false, gmailToken = null, gmailMsgsCache = [];
 
 // ============================================================
 // DADOS
@@ -1172,15 +1136,22 @@ function buscarIntimacoes() {
     .then(function(data) {
       if (!data.messages||!data.messages.length) { el.innerHTML='<div class="empty-state"><p>Nenhuma intimacao encontrada nos ultimos 30 dias.</p></div>'; return; }
       var promises=data.messages.slice(0,20).map(function(m) {
-        return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',{headers:{Authorization:'Bearer '+gmailToken}}).then(function(r){return r.json();});
+        return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=full',{headers:{Authorization:'Bearer '+gmailToken}}).then(function(r){return r.json();});
       });
       return Promise.all(promises).then(function(msgs) {
-        el.innerHTML=msgs.map(function(m) {
+        gmailMsgsCache = msgs;
+        el.innerHTML=msgs.map(function(m, idx) {
           var subj=(m.payload.headers.find(function(h){return h.name==='Subject';})||{}).value||'(sem assunto)';
           var from=(m.payload.headers.find(function(h){return h.name==='From';})||{}).value||'';
           var date=(m.payload.headers.find(function(h){return h.name==='Date';})||{}).value||'';
           var dt=date?new Date(date).toLocaleDateString('pt-BR'):'';
-          return '<div class="gmail-item"><div class="gmail-assunto">'+subj+'</div><div class="gmail-meta">'+from+' | '+dt+'</div><div class="gmail-snippet">'+(m.snippet||'')+'</div></div>';
+          return '<div class="gmail-item">'
+            +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">'
+            +'<div><div class="gmail-assunto">'+subj+'</div><div class="gmail-meta">'+from+' &nbsp;|&nbsp; '+dt+'</div></div>'
+            +'<button class="btn btn-primary btn-sm" style="flex-shrink:0;font-size:11px;" onclick="abrirEmailCompleto('+idx+')">&#128269; Abrir + Analisar</button>'
+            +'</div>'
+            +'<div class="gmail-snippet">'+(m.snippet||'')+'</div>'
+            +'</div>';
         }).join('');
       });
     }).catch(function(e){
@@ -1191,6 +1162,102 @@ function buscarIntimacoes() {
       el.innerHTML='<div class="empty-state"><p>Erro ao acessar Gmail: '+msg+hint+'</p></div>';
       gmailAutorizado=false;
     });
+}
+
+
+function abrirEmailCompleto(idx) {
+  var m = gmailMsgsCache[idx];
+  if (!m) { toast('Email nao encontrado no cache.','error'); return; }
+
+  var subj = (m.payload.headers.find(function(h){return h.name==='Subject';})||{}).value||'(sem assunto)';
+  var from = (m.payload.headers.find(function(h){return h.name==='From';})||{}).value||'';
+  var date = (m.payload.headers.find(function(h){return h.name==='Date';})||{}).value||'';
+  var dt   = date ? new Date(date).toLocaleDateString('pt-BR','dd/mm/yyyy') : '';
+
+  // Extrai corpo do email
+  var corpo = extrairCorpoEmail(m.payload);
+
+  // Monta modal de leitura
+  document.getElementById('modal-title').textContent = subj;
+  document.getElementById('modal-body').innerHTML =
+    '<div style="margin-bottom:12px;">'
+    +'<div style="font-size:12px;color:#888;margin-bottom:4px;"><strong>De:</strong> '+from+'</div>'
+    +'<div style="font-size:12px;color:#888;margin-bottom:12px;"><strong>Data:</strong> '+dt+'</div>'
+    +'<div style="background:var(--cream);border:1px solid var(--border);border-radius:7px;padding:14px;font-size:13px;line-height:1.8;max-height:400px;overflow-y:auto;white-space:pre-wrap;font-family:monospace;">'+escapeHtml(corpo)+'</div>'
+    +'</div>';
+  document.getElementById('modal-footer').innerHTML =
+    '<button class="btn btn-ghost" onclick="closeModal()">Fechar</button>'
+    +'<button class="btn btn-gold" onclick="enviarParaAnalisador('+idx+')">&#128269; Enviar para Analisador IA</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function extrairCorpoEmail(payload) {
+  if (!payload) return '';
+  // Tenta text/plain primeiro
+  if (payload.mimeType === 'text/plain' && payload.body && payload.body.data) {
+    return decodeBase64Gmail(payload.body.data);
+  }
+  // Recursivo em partes
+  if (payload.parts) {
+    for (var i=0; i<payload.parts.length; i++) {
+      var part = payload.parts[i];
+      if (part.mimeType === 'text/plain' && part.body && part.body.data) {
+        return decodeBase64Gmail(part.body.data);
+      }
+      if (part.parts) {
+        var sub = extrairCorpoEmail(part);
+        if (sub) return sub;
+      }
+    }
+    // Fallback para text/html se nao tiver plain
+    for (var j=0; j<payload.parts.length; j++) {
+      var p2 = payload.parts[j];
+      if (p2.mimeType === 'text/html' && p2.body && p2.body.data) {
+        var html = decodeBase64Gmail(p2.body.data);
+        // Remove tags HTML basicas
+        return html.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/[ \t]{3,}/g,' ').trim();
+      }
+    }
+  }
+  if (payload.body && payload.body.data) {
+    return decodeBase64Gmail(payload.body.data);
+  }
+  return '(conteudo nao disponivel)';
+}
+
+function decodeBase64Gmail(data) {
+  try {
+    // Gmail usa base64url (- e _ em vez de + e /)
+    var base64 = data.replace(/-/g,'+').replace(/_/g,'/');
+    var decoded = atob(base64);
+    // Converte bytes para string UTF-8
+    return decodeURIComponent(escape(decoded));
+  } catch(e) {
+    try { return atob(data.replace(/-/g,'+').replace(/_/g,'/')); }
+    catch(e2) { return data; }
+  }
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function enviarParaAnalisador(idx) {
+  var m = gmailMsgsCache[idx];
+  if (!m) return;
+  var corpo = extrairCorpoEmail(m.payload);
+  var subj  = (m.payload.headers.find(function(h){return h.name==='Subject';})||{}).value||'';
+  closeModal();
+  // Navega para analisador
+  var navItem = document.querySelector('.nav-item[onclick*="analisador"]');
+  showView('analisador', navItem);
+  // Preenche o textarea
+  var ta = document.getElementById('analisador-texto');
+  if (ta) {
+    ta.value = (subj ? 'ASSUNTO: '+subj+'\n\n' : '') + corpo;
+    ta.focus();
+    toast('Texto carregado no Analisador. Clique em Analisar.','success');
+  }
 }
 
 // ============================================================
