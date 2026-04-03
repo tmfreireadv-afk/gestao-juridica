@@ -402,7 +402,13 @@ textarea.form-control{resize:vertical;min-height:68px;}
           <div style="flex:1;font-family:'Playfair Display',serif;font-size:15px;font-weight:600;">Intimacoes recebidas no Gmail</div>
           <button class="btn btn-primary" onclick="buscarIntimacoes()">&#8635; Atualizar</button>
         </div>
-        <div style="padding:10px 16px;font-size:12px;color:#888;border-bottom:1px solid var(--cream2);">Exibe e-mails juridicos dos ultimos 30 dias. Requer Google Drive conectado.</div>
+        <div style="padding:12px 16px;background:#eef4fc;border-bottom:1px solid var(--cream2);">
+          <div style="font-size:12px;color:#1b3a5c;margin-bottom:10px;">Busca e-mails dos remetentes: PJe/TRF1, TRT5, Publicacoes Online e outros (ultimos 90 dias).</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-primary" id="btn-autorizar-gmail" onclick="autorizarGmail()" style="background:#2563a8;font-size:12px;">&#9993; 1. Autorizar Gmail</button>
+            <button class="btn btn-primary" onclick="buscarIntimacoes()" id="btn-buscar-gmail" style="opacity:0.5;font-size:12px;" disabled>&#8635; 2. Buscar Intimacoes</button>
+          </div>
+        </div>
       </div>
       <div id="gmail-lista"><div class="empty-state"><p>Clique em "Atualizar" para buscar as intimacoes.</p></div></div>
     </div>
@@ -535,7 +541,7 @@ var CLIENT_ID = '930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleuserco
 var SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly';
 var SCOPES_GMAIL = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/gmail.readonly';
 var DRIVE_FILE_NAME = 'gestao_juridica_dados.json';
-var tokenClient = null, accessToken = null, driveFileId = null, userEmail = '', syncTimeout = null, gmailAutorizado = false;
+var tokenClient = null, accessToken = null, driveFileId = null, userEmail = '', syncTimeout = null, gmailAutorizado = false, gmailToken = null;
 
 // ============================================================
 // DADOS
@@ -662,7 +668,7 @@ function loginGoogle() { if(!tokenClient){toast('Aguarde...','info');return;} to
 
 function logoutGoogle() {
   if (accessToken) google.accounts.oauth2.revoke(accessToken,function(){});
-  accessToken=null; driveFileId=null; userEmail=''; gmailAutorizado=false;
+  accessToken=null; driveFileId=null; userEmail=''; gmailAutorizado=false; gmailToken=null;
   localStorage.removeItem('gestao_juridica_meta');
   updateDriveUI(false); setSyncStatus('offline','Offline');
   toast('Desconectado.','info');
@@ -1109,21 +1115,36 @@ function imprimirAgenda() {
 // ============================================================
 // GMAIL INTIMACOES
 // ============================================================
-function buscarIntimacoes() {
-  if (!accessToken) { toast('Conecte o Google Drive primeiro.','info'); return; }
-  // Solicita permissao Gmail se necessario
-  if (!gmailAutorizado) {
-    toast('Solicitando permissao do Gmail...','info');
-    var gmailClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID, scope: SCOPES_GMAIL,
-      callback: function(resp) {
-        if (resp.error) { toast('Erro ao autorizar Gmail: '+resp.error,'error'); return; }
-        accessToken = resp.access_token; gmailAutorizado = true;
-        toast('Gmail autorizado!','success');
-        buscarIntimacoes();
+function autorizarGmail() {
+  if (!window.google||!window.google.accounts) { toast('API do Google ainda carregando. Aguarde.','info'); return; }
+  var btn = document.getElementById('btn-autorizar-gmail');
+  btn.disabled = true; btn.textContent = 'Autorizando...';
+  var gmailClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/gmail.readonly',
+    prompt: 'consent',
+    callback: function(resp) {
+      btn.disabled = false; btn.innerHTML = '&#10003; Gmail Autorizado';
+      btn.style.background = '#2e7d5e';
+      if (resp.error) {
+        btn.textContent = '1. Autorizar Gmail';
+        btn.style.background = '';
+        toast('Erro ao autorizar Gmail: '+resp.error,'error');
+        return;
       }
-    });
-    gmailClient.requestAccessToken();
+      gmailToken = resp.access_token;
+      gmailAutorizado = true;
+      var btnB = document.getElementById('btn-buscar-gmail');
+      btnB.disabled = false; btnB.style.opacity = '1';
+      toast('Gmail autorizado com sucesso!','success');
+    }
+  });
+  gmailClient.requestAccessToken();
+}
+
+function buscarIntimacoes() {
+  if (!gmailAutorizado || !gmailToken) {
+    toast('Clique primeiro em "1. Autorizar Gmail".','info');
     return;
   }
   var el=document.getElementById('gmail-lista');
@@ -1132,12 +1153,12 @@ function buscarIntimacoes() {
   var termosAssunto='subject:(intimacao OR despacho OR sentenca OR citacao OR publicacao OR mandado OR notificacao OR peticao OR recurso OR acordao OR decisao OR ato OR edital OR "diario de justica" OR "publicacoes online" OR PUSH)';
   var remetentesJuridicos='from:(suporte@publicacoesonline.com.br OR naoresponda.pje.push38@trf1.jus.br OR naoresponda.pje.push40@trf1.jus.br OR nao-responda@trt5.jus.br OR pje.jus.br OR tjba.jus.br OR trt5.jus.br OR stj.jus.br OR stf.jus.br OR trf1.jus.br OR jus.br)';
   var query=encodeURIComponent('('+termosAssunto+' OR '+remetentesJuridicos+') newer_than:90d');
-  fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q='+query+'&maxResults=20',{headers:{Authorization:'Bearer '+accessToken}})
+  fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q='+query+'&maxResults=30',{headers:{Authorization:'Bearer '+gmailToken}})
     .then(function(r){return r.json();})
     .then(function(data) {
       if (!data.messages||!data.messages.length) { el.innerHTML='<div class="empty-state"><p>Nenhuma intimacao encontrada nos ultimos 30 dias.</p></div>'; return; }
       var promises=data.messages.slice(0,20).map(function(m) {
-        return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',{headers:{Authorization:'Bearer '+accessToken}}).then(function(r){return r.json();});
+        return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/'+m.id+'?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date',{headers:{Authorization:'Bearer '+gmailToken}}).then(function(r){return r.json();});
       });
       return Promise.all(promises).then(function(msgs) {
         el.innerHTML=msgs.map(function(m) {
@@ -1477,6 +1498,169 @@ function exportarExcel() {
 // ============================================================
 var historicoAnalises = [];
 
+
+// ============================================================
+// ANALISADOR LOCAL DE INTIMACOES
+// ============================================================
+function analisarTextoLocalmente(texto) {
+  var t = texto.toLowerCase();
+
+  // Detecta tipo de documento
+  var tipo = 'Publicacao DJe';
+  if (t.indexOf('intimac')>=0) tipo='Intimacao';
+  else if (t.indexOf('despacho')>=0) tipo='Despacho';
+  else if (t.indexOf('sentenc')>=0) tipo='Sentenca';
+  else if (t.indexOf('acord')>=0) tipo='Acordao';
+  else if (t.indexOf('citac')>=0) tipo='Citacao';
+  else if (t.indexOf('notificac')>=0) tipo='Notificacao';
+  else if (t.indexOf('decisao')>=0||t.indexOf('decisão')>=0) tipo='Decisao';
+
+  // Extrai numero do processo CNJ: 0000000-00.0000.0.00.0000
+  var numProc = '';
+  var regexProc = /\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{2}\.\d{4}/;
+  var matchProc = texto.match(regexProc);
+  if (matchProc) numProc = matchProc[0];
+
+  // Extrai datas (dd/mm/aaaa ou aaaa-mm-dd)
+  var datas = [];
+  var regexData1 = /(\d{2})\/(\d{2})\/(\d{4})/g;
+  var regexData2 = /(\d{4})-(\d{2})-(\d{2})/g;
+  var m;
+  while ((m=regexData1.exec(texto))!==null) datas.push(m[3]+'-'+m[2]+'-'+m[1]);
+  while ((m=regexData2.exec(texto))!==null) datas.push(m[0]);
+  datas.sort();
+
+  // Extrai hora
+  var hora = '';
+    var matchHora = texto.match(/(\d{1,2})[h:](\d{2})/i);
+  if (matchHora) hora = String(matchHora[1]).padStart(2,'0')+':'+matchHora[2];
+
+  // Detecta prazo em dias
+  var prazoMatch = texto.match(/prazo\s+de\s+(\d+)\s+(?:dias|dia)/i);
+  var diasPrazo = prazoMatch ? parseInt(prazoMatch[1]) : 15;
+
+  // Calcula data limite se tiver data de publicacao
+  var dataLimite = '';
+  var dataPublicacao = datas.length > 0 ? datas[0] : '';
+  if (dataPublicacao) {
+    var dt = new Date(dataPublicacao+'T12:00:00');
+    dt.setDate(dt.getDate()+diasPrazo);
+    dataLimite = dt.toISOString().split('T')[0];
+  } else {
+    // Usa hoje + diasPrazo
+    var dt2 = new Date();
+    dt2.setDate(dt2.getDate()+diasPrazo);
+    dataLimite = dt2.toISOString().split('T')[0];
+    dataPublicacao = hoje();
+  }
+
+  // Detecta vara/tribunal
+  var vara = '';
+  var matchVara = texto.match(/(\d+[.\s]*vara[^,\n]{0,50})/i);
+  if (matchVara) vara = matchVara[0].trim().substring(0,60);
+  if (!vara) {
+    if (t.indexOf('trf')>=0) vara = 'TRF';
+    else if (t.indexOf('trt')>=0) vara = 'TRT-5';
+    else if (t.indexOf('tjba')>=0||t.indexOf('tj-ba')>=0) vara = 'TJ-BA';
+    else if (t.indexOf('jec')>=0) vara = 'JEC';
+  }
+
+  // Detecta partes
+  var autor = '', reu = '';
+  var matchAutor = texto.match(/(?:autor[a]?|requerente|reclamante)[:\s]+([A-Z][A-Za-z\s]{3,40})/i);
+  if (matchAutor) autor = matchAutor[1].trim();
+  var matchReu = texto.match(/(?:réu|reu|requerido|reclamado)[:\s]+([A-Z][A-Za-z\s]{3,40})/i);
+  if (matchReu) reu = matchReu[1].trim();
+
+  // Tenta identificar cliente nos processos cadastrados
+  if (!autor && numProc) {
+    var proc = dados.processos.find(function(p){return p.numero===numProc;});
+    if (proc) { autor = proc.cliente; reu = proc.parte_contraria||''; }
+  }
+
+  // Detecta comarca
+  var comarca = '';
+  var matchComarca = texto.match(/comarca\s+de?\s+([A-Za-z\s]{3,30})/i);
+  if (matchComarca) comarca = matchComarca[1].trim();
+
+  // Urgencia
+  var urgencia = 'Media';
+  if (t.indexOf('improrrogavel')>=0||t.indexOf('prazo fatal')>=0||t.indexOf('peremptorio')>=0||diasPrazo<=5) urgencia='Alta';
+  else if (diasPrazo>=30) urgencia='Baixa';
+
+  // Resumo automatico
+  var resumo = tipo+' referente ao processo '+( numProc||'identificado no texto');
+  if (vara) resumo += ' - '+vara;
+  if (diasPrazo) resumo += '. Prazo de '+diasPrazo+' dias';
+  if (dataLimite) resumo += ' (vence em '+fmtDate(dataLimite)+')';
+  resumo += '.';
+
+  // Detecta se e audiencia
+  var ehAudiencia = t.indexOf('audiencia')>=0||t.indexOf('audiência')>=0||t.indexOf('julgamento')>=0||t.indexOf('sessao')>=0;
+
+  // Monta acoes
+  var acoes = [];
+  if (ehAudiencia && datas.length > 0) {
+    acoes.push({
+      modulo: 'audiencia',
+      descricao: tipo+' - '+(numProc||'processo'),
+      data_limite: datas[0],
+      hora: hora,
+      local: vara,
+      tipo: t.indexOf('julgamento')>=0?'Julgamento':'Instrucao'
+    });
+    acoes.push({
+      modulo: 'tarefa',
+      descricao: 'Preparar para audiencia/julgamento - '+( numProc||'processo'),
+      data_limite: dataLimite,
+      hora: '',
+      local: '',
+      tipo: 'Preparacao'
+    });
+  } else {
+    acoes.push({
+      modulo: 'prazo',
+      descricao: tipo+' - '+(numProc||'processo'),
+      data_limite: dataLimite,
+      hora: '',
+      local: '',
+      tipo: 'Processual'
+    });
+  }
+
+  return {
+    tipo_documento: tipo,
+    numero_processo: numProc,
+    partes: {autor: autor, reu: reu},
+    vara_tribunal: vara,
+    comarca: comarca,
+    data_publicacao: dataPublicacao,
+    resumo: resumo,
+    urgencia: urgencia,
+    requer_acao: true,
+    acoes_sugeridas: acoes,
+    observacoes: datas.length>1?'Outras datas encontradas no texto: '+datas.slice(1).map(fmtDate).join(', '):''
+  };
+}
+
+// Versao aprimorada com IA via proxy Claude.ai (funciona quando rodando dentro do claude.ai)
+function tentarAnalisarComIA(texto, callback) {
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      messages: [{role:'user', content: 'Analise esta intimacao juridica brasileira e retorne JSON com: tipo_documento, numero_processo, partes{autor,reu}, vara_tribunal, comarca, data_publicacao(YYYY-MM-DD), resumo(2 frases), urgencia(Alta/Media/Baixa), acoes_sugeridas[{modulo(prazo/audiencia/tarefa), descricao, data_limite(YYYY-MM-DD), hora, local, tipo}], observacoes. Somente JSON, sem markdown.\n\n'+texto}]
+    })
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.content&&d.content[0]&&d.content[0].text){
+      var raw=d.content[0].text.replace(/```json/g,'').replace(/```/g,'').trim();
+      try{ callback(null,JSON.parse(raw)); }catch(e){ callback(e,null); }
+    } else { callback(new Error('sem resposta'),null); }
+  }).catch(function(e){ callback(e,null); });
+}
+
 function analisarIntimacao() {
   var texto = document.getElementById('analisador-texto').value.trim();
   if (!texto) { toast('Cole o texto da intimacao antes de analisar.','info'); return; }
@@ -1526,43 +1710,20 @@ Retorne SOMENTE um objeto JSON valido, sem markdown, sem explicacoes, com esta e
   "observacoes": "informacoes adicionais relevantes ou vazio"
 }`;
 
-  fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    btn.disabled = false;
-    btn.textContent = 'Analisar com IA';
-    status.textContent = '';
-
-    var raw = data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
-    if (!raw) { toast('Resposta vazia da IA. Tente novamente.','error'); return; }
-
-    // Limpa markdown se houver
-    raw = raw.replace(/```json/g,'').replace(/```/g,'').trim();
-    var resultado;
-    try { resultado = JSON.parse(raw); }
-    catch(e) {
-      toast('Erro ao interpretar resposta da IA.','error');
-      document.getElementById('analisador-resultado').style.display='block';
-      document.getElementById('analisador-resultado-content').innerHTML='<pre style="font-size:12px;white-space:pre-wrap;color:#555;">'+raw+'</pre>';
-      return;
+  // Tenta primeiro via IA (funciona no Claude.ai), fallback para analise local
+  status.textContent = 'Processando...';
+  tentarAnalisarComIA(texto, function(err, resultado) {
+    if (!err && resultado) {
+      btn.disabled = false; btn.textContent = 'Analisar com IA'; status.textContent = 'Analise por IA';
+      exibirResultadoAnalise(resultado, texto);
+      adicionarAoHistorico(resultado, texto);
+    } else {
+      // Fallback: analise local por padroes
+      var resultado2 = analisarTextoLocalmente(texto);
+      btn.disabled = false; btn.textContent = 'Analisar com IA'; status.textContent = 'Analise por padroes';
+      exibirResultadoAnalise(resultado2, texto);
+      adicionarAoHistorico(resultado2, texto);
     }
-
-    exibirResultadoAnalise(resultado, texto);
-    adicionarAoHistorico(resultado, texto);
-  })
-  .catch(function(e) {
-    btn.disabled = false;
-    btn.textContent = 'Analisar com IA';
-    status.textContent = '';
-    toast('Erro de conexao com a IA: ' + e.message,'error');
   });
 }
 
