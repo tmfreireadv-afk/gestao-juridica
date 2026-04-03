@@ -403,10 +403,15 @@ textarea.form-control{resize:vertical;min-height:68px;}
           <button class="btn btn-primary" onclick="buscarIntimacoes()">&#8635; Atualizar</button>
         </div>
         <div style="padding:12px 16px;background:#eef4fc;border-bottom:1px solid var(--cream2);">
-          <div style="font-size:12px;color:#1b3a5c;margin-bottom:10px;">Busca e-mails dos remetentes: PJe/TRF1, TRT5, Publicacoes Online e outros (ultimos 90 dias).</div>
+          <div style="font-size:12px;color:#1b3a5c;margin-bottom:8px;line-height:1.6;">
+            <strong>Antes de usar:</strong> No Google Cloud Console, adicione o escopo
+            <code style="background:#dde;padding:1px 5px;border-radius:3px;">Gmail API (gmail.readonly)</code>
+            na tela de consentimento OAuth do seu projeto. Depois clique em Autorizar.
+          </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-primary" id="btn-autorizar-gmail" onclick="autorizarGmail()" style="background:#2563a8;font-size:12px;">&#9993; 1. Autorizar Gmail</button>
             <button class="btn btn-primary" onclick="buscarIntimacoes()" id="btn-buscar-gmail" style="opacity:0.5;font-size:12px;" disabled>&#8635; 2. Buscar Intimacoes</button>
+            <div id="gmail-status-msg" style="font-size:11.5px;color:#888;align-self:center;"></div>
           </div>
         </div>
       </div>
@@ -1118,25 +1123,34 @@ function imprimirAgenda() {
 function autorizarGmail() {
   if (!window.google||!window.google.accounts) { toast('API do Google ainda carregando. Aguarde.','info'); return; }
   var btn = document.getElementById('btn-autorizar-gmail');
+  var msg = document.getElementById('gmail-status-msg');
   btn.disabled = true; btn.textContent = 'Autorizando...';
+  if (msg) msg.textContent = 'Abrindo janela de autorizacao...';
   var gmailClient = google.accounts.oauth2.initTokenClient({
     client_id: CLIENT_ID,
     scope: 'https://www.googleapis.com/auth/gmail.readonly',
     prompt: 'consent',
     callback: function(resp) {
-      btn.disabled = false; btn.innerHTML = '&#10003; Gmail Autorizado';
-      btn.style.background = '#2e7d5e';
       if (resp.error) {
-        btn.textContent = '1. Autorizar Gmail';
+        btn.disabled = false;
+        btn.innerHTML = '&#9993; 1. Autorizar Gmail';
         btn.style.background = '';
-        toast('Erro ao autorizar Gmail: '+resp.error,'error');
+        var errMsg = resp.error;
+        if (errMsg === 'access_denied') errMsg = 'Acesso negado. Verifique se o escopo Gmail foi adicionado no Google Cloud Console.';
+        if (errMsg === 'invalid_scope') errMsg = 'Escopo invalido. Ative a Gmail API no Google Cloud Console e adicione o escopo gmail.readonly na tela de consentimento OAuth.';
+        if (msg) msg.textContent = 'Erro: ' + errMsg;
+        toast('Erro Gmail: ' + errMsg, 'error');
         return;
       }
       gmailToken = resp.access_token;
       gmailAutorizado = true;
+      btn.disabled = false;
+      btn.innerHTML = '&#10003; Gmail Autorizado';
+      btn.style.background = '#2e7d5e';
+      if (msg) msg.textContent = 'Autorizado! Clique em Buscar Intimacoes.';
       var btnB = document.getElementById('btn-buscar-gmail');
-      btnB.disabled = false; btnB.style.opacity = '1';
-      toast('Gmail autorizado com sucesso!','success');
+      if (btnB) { btnB.disabled = false; btnB.style.opacity = '1'; }
+      toast('Gmail autorizado!', 'success');
     }
   });
   gmailClient.requestAccessToken();
@@ -1710,21 +1724,22 @@ Retorne SOMENTE um objeto JSON valido, sem markdown, sem explicacoes, com esta e
   "observacoes": "informacoes adicionais relevantes ou vazio"
 }`;
 
-  // Tenta primeiro via IA (funciona no Claude.ai), fallback para analise local
-  status.textContent = 'Processando...';
-  tentarAnalisarComIA(texto, function(err, resultado) {
-    if (!err && resultado) {
-      btn.disabled = false; btn.textContent = 'Analisar com IA'; status.textContent = 'Analise por IA';
+  status.textContent = 'Analisando padroes juridicos...';
+  setTimeout(function() {
+    try {
+      var resultado = analisarTextoLocalmente(texto);
+      btn.disabled = false;
+      btn.textContent = 'Analisar';
+      status.textContent = '';
       exibirResultadoAnalise(resultado, texto);
       adicionarAoHistorico(resultado, texto);
-    } else {
-      // Fallback: analise local por padroes
-      var resultado2 = analisarTextoLocalmente(texto);
-      btn.disabled = false; btn.textContent = 'Analisar com IA'; status.textContent = 'Analise por padroes';
-      exibirResultadoAnalise(resultado2, texto);
-      adicionarAoHistorico(resultado2, texto);
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Analisar';
+      status.textContent = '';
+      toast('Erro na analise: ' + e.message, 'error');
     }
-  });
+  }, 600);
 }
 
 function exibirResultadoAnalise(r, textoOriginal) {
