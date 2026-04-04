@@ -149,6 +149,10 @@ textarea.fc{resize:vertical;min-height:65px}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--ink2);color:#fff;padding:11px 17px;border-radius:9px;font-size:13px;font-weight:500;z-index:999;box-shadow:0 4px 20px rgba(0,0,0,.25);transform:translateY(80px);opacity:0;transition:all .3s}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.ok{border-left:4px solid #2e7d5e}.toast.err{border-left:4px solid var(--red)}.toast.info{border-left:4px solid var(--gold)}
+.sc-link{cursor:pointer;transition:transform .15s,box-shadow .15s}
+.sc-link:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,26,46,.15)}
+.sc-arr{font-size:11px;color:#bbb;margin-left:4px}
+.sc-link:hover .sc-arr{color:var(--blue)}
 @media print{.sb,.topbar,.dv,.mo,.toast,.btn,.acts{display:none!important}.main{margin-left:0!important}body{background:#fff}table{font-size:11px}}
 @media(max-width:900px){.sg,.sg3{grid-template-columns:repeat(2,1fr)}.fg{grid-template-columns:1fr}.fgg.full{grid-column:1}}
 </style>
@@ -213,10 +217,10 @@ textarea.fc{resize:vertical;min-height:65px}
   <!-- DASHBOARD -->
   <div id="v-dashboard" class="view active">
     <div class="sg">
-      <div class="sc pr"><div class="sc-l">Prazos Ativos</div><div class="sc-n" id="s-pr">0</div><div class="sc-s" id="s-prs">-</div></div>
-      <div class="sc au"><div class="sc-l">Audiencias</div><div class="sc-n" id="s-au">0</div><div class="sc-s" id="s-aus">-</div></div>
-      <div class="sc ta"><div class="sc-l">Tarefas Pendentes</div><div class="sc-n" id="s-ta">0</div><div class="sc-s" id="s-tas">-</div></div>
-      <div class="sc po"><div class="sc-l">Processos Ativos</div><div class="sc-n" id="s-po">0</div><div class="sc-s" id="s-pos">-</div></div>
+      <div class="sc pr sc-link" onclick="navClick('prazos')" title="Ver prazos"><div class="sc-l">Prazos Ativos <span class="sc-arr">&#8594;</span></div><div class="sc-n" id="s-pr">0</div><div class="sc-s" id="s-prs">-</div></div>
+      <div class="sc au sc-link" onclick="navClick('audiencias')" title="Ver audiencias"><div class="sc-l">Audiencias <span class="sc-arr">&#8594;</span></div><div class="sc-n" id="s-au">0</div><div class="sc-s" id="s-aus">-</div></div>
+      <div class="sc ta sc-link" onclick="navClick('tarefas')" title="Ver tarefas"><div class="sc-l">Tarefas Pendentes <span class="sc-arr">&#8594;</span></div><div class="sc-n" id="s-ta">0</div><div class="sc-s" id="s-tas">-</div></div>
+      <div class="sc po sc-link" onclick="navClick('processos')" title="Ver processos"><div class="sc-l">Processos Ativos <span class="sc-arr">&#8594;</span></div><div class="sc-n" id="s-po">0</div><div class="sc-s" id="s-pos">-</div></div>
     </div>
     <div class="sg">
       <div class="sc rc"><div class="sc-l">Receitas (mes)</div><div class="sc-n pos" id="s-rc">R$ 0</div><div class="sc-s" id="s-rcs">-</div></div>
@@ -596,6 +600,15 @@ function toast(msg,type){var el=document.getElementById('toast');el.textContent=
 // ============================================================
 // NAVIGATION
 // ============================================================
+function navClick(name){
+  // Find nav item by iterating - avoids quote escaping issues
+  var ni=null;
+  document.querySelectorAll('.ni').forEach(function(el){
+    if(el.getAttribute('onclick')&&el.getAttribute('onclick').indexOf("'"+name+"'")>=0)ni=el;
+  });
+  nav(name,ni);
+}
+
 var TITLES={dashboard:'Dashboard',agenda_mes:'Agenda do Mes',prazos:'Prazos Processuais',audiencias:'Audiencias',reunioes:'Reunioes e Atendimentos',processos:'Processos',tarefas:'Tarefas',financeiro:'Financeiro',intimacoes:'Intimacoes Gmail',analisador:'Analisador IA'};
 function nav(name,el){
   document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
@@ -795,7 +808,44 @@ var curType=null;
 
 function openM(type){curType=type;editId=null;var cfg=FORMS[type];document.getElementById('mo-title').textContent=cfg.t;document.getElementById('mo-body').innerHTML=buildF(cfg.f,{});document.getElementById('mo-form').classList.add('open');}
 function editItem(type,id){var k=T2K[type];var mt=K2M[k]||type;curType=mt;editId=id;var it=D[k]&&D[k].find(function(r){return r.id===id;});if(!it)return;var cfg=FORMS[mt];document.getElementById('mo-title').textContent='Editar - '+cfg.t.replace('Novo ','').replace('Nova ','');document.getElementById('mo-body').innerHTML=buildF(cfg.f,it);document.getElementById('mo-form').classList.add('open');}
-function buildF(fields,data){return'<div class="fg">'+fields.map(function(f){var ctrl;if(f.tp==='sel')ctrl='<select class="fc" name="'+f.n+'">'+f.opts.map(function(o){return'<option'+(data[f.n]===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';else if(f.tp==='ta')ctrl='<textarea class="fc" name="'+f.n+'">'+(data[f.n]||'')+'</textarea>';else ctrl='<input class="fc" type="'+f.tp+'" name="'+f.n+'" value="'+(data[f.n]||'')+'"'+(f.tp==='number'?' step="0.01"':'')+' >';return'<div class="fgg'+(f.full?' full':'')+'" ><label class="fl2">'+f.l+(f.req?' *':'')+'</label>'+ctrl+'</div>';}).join('')+'</div>';}
+function buildF(fields,data){
+  return'<div class="fg">'+fields.map(function(f){
+    var ctrl;
+    if(f.tp==='sel'){
+      ctrl='<select class="fc" name="'+f.n+'">'+f.opts.map(function(o){return'<option'+(data[f.n]===o?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+    } else if(f.tp==='ta'){
+      ctrl='<textarea class="fc" name="'+f.n+'">'+(data[f.n]||'')+'</textarea>';
+    } else if(f.n==='processo'&&f.tp==='text'){
+      // Campo processo com autocomplete dos processos cadastrados
+      var procOpts=D.processos.map(function(p){return'<option value="'+p.numero+'">'+p.numero+(p.cliente?' - '+p.cliente:'')+'</option>';}).join('');
+      var listId='dl-proc-'+Math.random().toString(36).slice(2,6);
+      ctrl='<input class="fc" type="text" name="'+f.n+'" value="'+(data[f.n]||'')+'" list="'+listId+'" placeholder="Digite ou selecione..." oninput="autoFillProc(this)">'
+          +'<datalist id="'+listId+'">'+procOpts+'</datalist>';
+    } else if(f.n==='cliente'&&f.tp==='text'){
+      // Campo cliente com sugestões dos clientes cadastrados
+      var cliOpts=[...new Set(D.processos.map(function(p){return p.cliente;}).filter(Boolean))].map(function(cl){return'<option value="'+cl+'"></option>';}).join('');
+      var cliId='dl-cli-'+Math.random().toString(36).slice(2,6);
+      ctrl='<input class="fc" type="text" name="'+f.n+'" value="'+(data[f.n]||'')+'" list="'+cliId+'">'
+          +'<datalist id="'+cliId+'">'+cliOpts+'</datalist>';
+    } else {
+      ctrl='<input class="fc" type="'+f.tp+'" name="'+f.n+'" value="'+(data[f.n]||'')+'"'+(f.tp==='number'?' step="0.01"':'')+' >';
+    }
+    return'<div class="fgg'+(f.full?' full':'')+'" ><label class="fl2">'+f.l+(f.req?' *':'')+'</label>'+ctrl+'</div>';
+  }).join('')+'</div>';
+}
+
+function autoFillProc(inputEl){
+  var num=inputEl.value;if(!num)return;
+  var proc=D.processos.find(function(p){return p.numero===num;});
+  if(!proc)return;
+  var form=inputEl.closest('.fg');if(!form)return;
+  var cliEl=form.querySelector('[name="cliente"]');
+  if(cliEl&&!cliEl.value)cliEl.value=proc.cliente||'';
+  var tribEl=form.querySelector('[name="tribunal"]');
+  if(tribEl&&proc.tribunal)Array.from(tribEl.options).forEach(function(o){if(o.value===proc.tribunal)o.selected=true;});
+}
+function preencherDadosProcesso(num,form){autoFillProc({value:num,closest:function(){return form;}});}
+
 function closeM(){document.getElementById('mo-form').classList.remove('open');editId=null;}
 function saveItem(){
   var obj={};document.getElementById('mo-body').querySelectorAll('[name]').forEach(function(el){obj[el.name]=el.value.trim();});
@@ -918,70 +968,196 @@ function analisar(){
   },500);
 }
 
+function diasUteis(dataBase, dias) {
+  // Calcula dias uteis a partir de uma data base
+  // Feriados nacionais fixos (MM-DD)
+  var feriados=['01-01','04-21','05-01','09-07','10-12','11-02','11-15','11-20','12-25'];
+  var dt = new Date(dataBase+'T12:00:00');
+  var count = 0;
+  while(count < dias) {
+    dt.setDate(dt.getDate()+1);
+    var dow = dt.getDay(); // 0=dom, 6=sab
+    if(dow===0||dow===6) continue;
+    var mmdd = String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+    if(feriados.indexOf(mmdd)>=0) continue;
+    count++;
+  }
+  return dt.toISOString().split('T')[0];
+}
+
 function analisarTexto(txt){
   var t=txt.toLowerCase();
   var r={tipo:'Publicacao',processo:'',autor:'',reu:'',vara:'',comarca:'',tipo_acao:'',data_pub:'',assunto:'',prazo_txt:'',prazo_data:'',urgencia:'Media',acoes:[]};
-  // Tipo
+
+  // ── Tipo de documento
   if(t.indexOf('intimac')>=0)r.tipo='Intimacao';
   else if(t.indexOf('despacho')>=0)r.tipo='Despacho';
   else if(t.indexOf('sentenc')>=0)r.tipo='Sentenca';
-  else if(t.indexOf('acord')>=0)r.tipo='Acordao';
-  else if(t.indexOf('citac')>=0)r.tipo='Citacao';
-  else if(t.indexOf('decisao')>=0||t.indexOf('decis\u00e3o')>=0)r.tipo='Decisao';
+  else if(t.indexOf('acord\u00e3o')>=0||t.indexOf('acordao')>=0)r.tipo='Acordao';
+  else if(t.indexOf('cita\u00e7\u00e3o')>=0||t.indexOf('citacao')>=0)r.tipo='Citacao';
+  else if(t.indexOf('decis\u00e3o')>=0||t.indexOf('decisao')>=0)r.tipo='Decisao';
   else if(t.indexOf('mandado')>=0)r.tipo='Mandado';
-  else if(t.indexOf('notificac')>=0)r.tipo='Notificacao';
-  // Processo CNJ
+  else if(t.indexOf('notifica\u00e7\u00e3o')>=0||t.indexOf('notificacao')>=0)r.tipo='Notificacao';
+  else if(t.indexOf('edital')>=0)r.tipo='Edital';
+
+  // ── Numero processo CNJ (padrao 7-2.4.1.2.4)
   var mp=txt.match(/\d{7}-\d{2}\.\d{4}\.\d{1,2}\.\d{2}\.\d{4}/g);
-  if(mp&&mp.length){r.processo=mp[0];var pc=D.processos.find(function(p){return p.numero===mp[0];});if(pc){r.autor=pc.cliente||'';r.reu=pc.parte_contraria||'';r.vara=pc.vara||pc.tribunal||'';r.comarca=pc.comarca||'';r.tipo_acao=pc.tipo_acao||'';}}
-  // Partes
-  if(!r.autor){var ma=txt.match(/(?:autor[a]?|requerente|reclamante|impetrante|exequente)[:\s]+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s]{3,50}?)(?:\s*[,\n;]|$)/i);if(ma)r.autor=ma[1].trim();}
-  if(!r.reu){var mr=txt.match(/(?:r\u00e9u|reu|requerido[a]?|reclamado[a]?|executado[a]?)[:\s]+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s]{3,50}?)(?:\s*[,\n;]|$)/i);if(mr)r.reu=mr[1].trim();}
-  // Tipo de acao
-  var tiposA=['mandado de seguranca','habeas corpus','embargos de declaracao','recurso especial','recurso ordinario','agravo regimental','agravo interno','apelacao','execucao fiscal','reclamacao trabalhista','acao trabalhista','acao de cobranca','acao monitoria','acao de despejo','usucapiao','inventario','tutela antecipada','tutela de urgencia','acao civil publica'];
+  if(mp&&mp.length){
+    r.processo=mp[0];
+    var pc=D.processos.find(function(p){return p.numero===mp[0];});
+    if(pc){r.autor=pc.cliente||'';r.reu=pc.parte_contraria||'';r.vara=pc.vara||pc.tribunal||'';r.comarca=pc.comarca||'';r.tipo_acao=pc.tipo_acao||'';}
+  }
+
+  // ── Partes do processo (se nao encontrou no cadastro)
+  if(!r.autor){
+    var ma=txt.match(/(?:autor[a]?|requerente|reclamante|impetrante|exequente|promovente)[:\s-]+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s\.]{3,60}?)(?:\s*[,\n;(]|$)/im);
+    if(ma)r.autor=ma[1].trim().replace(/\s+$/,'');
+  }
+  if(!r.reu){
+    var mrr=txt.match(/(?:r\u00e9u|reu|requerido[a]?|reclamado[a]?|executado[a]?|impetrado[a]?|promovido[a]?)[:\s-]+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s\.]{3,60}?)(?:\s*[,\n;(]|$)/im);
+    if(mrr)r.reu=mrr[1].trim().replace(/\s+$/,'');
+  }
+
+  // ── Tipo de acao
+  var tiposA=[
+    'mandado de seguran\u00e7a','mandado de seguranca','habeas corpus','habeas data',
+    'embargos de declara\u00e7\u00e3o','embargos de declaracao','embargos \u00e0 execu\u00e7\u00e3o','embargos a execucao',
+    'recurso especial','recurso ordin\u00e1rio','recurso ordinario','agravo regimental','agravo interno',
+    'agravo de instrumento','apela\u00e7\u00e3o','apelacao',
+    'execu\u00e7\u00e3o fiscal','execucao fiscal','execu\u00e7\u00e3o trabalhista','execucao trabalhista',
+    'reclama\u00e7\u00e3o trabalhista','reclamacao trabalhista','dissi\u00eddio','dissidio',
+    'a\u00e7\u00e3o civil p\u00fablica','acao civil publica',
+    'a\u00e7\u00e3o de cobran\u00e7a','acao de cobranca','a\u00e7\u00e3o monit\u00f3ria','acao monitoria',
+    'a\u00e7\u00e3o de despejo','acao de despejo','usucapi\u00e3o','usucapiao',
+    'invent\u00e1rio','inventario','alvara','tutela antecipada','tutela de urg\u00eancia'
+  ];
   if(!r.tipo_acao)tiposA.forEach(function(tp){if(t.indexOf(tp)>=0&&!r.tipo_acao)r.tipo_acao=tp.charAt(0).toUpperCase()+tp.slice(1);});
-  // Vara/Tribunal
+
+  // ── Vara / Tribunal
   if(!r.vara){
-    var mv=txt.match(/(\d+[ao\u00ba\u00aa\u002e]?\s*(?:vara|juizado)[^\n,]{0,60})/i);
+    var mv=txt.match(/(\d+[ao\u00ba\u00aa]?\s*(?:vara|juizado)[^\n,]{0,60})/i);
     if(mv)r.vara=mv[0].trim().substring(0,70);
-    else if(t.indexOf('trf')>=0){var mt2=txt.match(/TRF[\s-]*\d/i);r.vara=mt2?mt2[0]:'TRF';}
-    else if(t.indexOf('trt')>=0){var mt3=txt.match(/TRT[\s-]*\d+/i);r.vara=mt3?mt3[0]:'TRT';}
-    else if(t.indexOf('tjba')>=0||t.indexOf('tj-ba')>=0)r.vara='TJ-BA';
+    else if(t.indexOf('trf1')>=0||t.indexOf('trf-1')>=0||t.indexOf('trf 1')>=0)r.vara='TRF-1';
+    else if(t.indexOf('trt5')>=0||t.indexOf('trt-5')>=0||t.indexOf('trt 5')>=0)r.vara='TRT-5';
+    else if(t.indexOf('tjba')>=0||t.indexOf('tj-ba')>=0||t.indexOf('tribunal de justi\u00e7a da bahia')>=0)r.vara='TJ-BA';
     else if(t.indexOf('stj')>=0)r.vara='STJ';
     else if(t.indexOf('stf')>=0)r.vara='STF';
     else if(t.indexOf('jec')>=0)r.vara='JEC';
   }
-  // Comarca
-  if(!r.comarca){var mc=txt.match(/comarca\s+d[aeo]?\s+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s]{2,30}?)(?:\s*[,\n;-]|$)/i);if(mc)r.comarca=mc[1].trim();}
-  // Datas
-  var datas=[];var m1;var re1=/(\\d{2})\/(\\d{2})\/(\\d{4})/g;var re2=/(\\d{4})-(\\d{2})-(\\d{2})/g;
+
+  // ── Comarca
+  if(!r.comarca){
+    var mc=txt.match(/comarca\s+d[aeo]?\s+([A-Z\u00C0-\u00DA][A-Za-z\u00C0-\u00FA\s]{2,30}?)(?:\s*[,\n;-]|$)/i);
+    if(mc)r.comarca=mc[1].trim();
+  }
+
+  // ── Data de publicacao
+  var datas=[];
+  var re1=/(\d{2})\/(\d{2})\/(\d{4})/g;var re2=/(\d{4})-(\d{2})-(\d{2})/g;var m1;
   re1.lastIndex=0;while((m1=re1.exec(txt))!==null)datas.push(m1[3]+'-'+m1[2]+'-'+m1[1]);
-  re2.lastIndex=0;while((m1=re2.exec(txt))!==null)datas.push(m1[0]);
+  re2.lastIndex=0;while((m1=re2.exec(txt))!==null){if(parseInt(m1[1])>=2000&&parseInt(m1[1])<=2099)datas.push(m1[0]);}
   datas=datas.filter(function(d,i,a){return a.indexOf(d)===i;}).sort();
   r.data_pub=datas.length>0?datas[0]:hj();
-  // Hora
-  var hora='';var mh=txt.match(/(\d{1,2})[h:](\d{2})/i);if(mh)hora=mh[1].padStart(2,'0')+':'+mh[2];
-  // Prazo
-  var dias=15;var mpr=txt.match(/prazo\s+(?:de\s+)?(\d+)\s+(?:dias?\s+)?(?:uteis?|corridos?|dias?)/i);
-  if(mpr)dias=parseInt(mpr[1]);
-  else if(t.indexOf('cinco dias')>=0||t.indexOf('5 dias')>=0)dias=5;
-  else if(t.indexOf('dez dias')>=0||t.indexOf('10 dias')>=0)dias=10;
-  else if(t.indexOf('quinze dias')>=0||t.indexOf('15 dias')>=0)dias=15;
-  else if(t.indexOf('trinta dias')>=0||t.indexOf('30 dias')>=0)dias=30;
-  else if(t.indexOf('peremptorio')>=0||t.indexOf('improrrogavel')>=0)dias=5;
-  var uteis=t.indexOf('uteis')>=0||t.indexOf('\u00fateis')>=0;
-  var dtBase=datas.length>0?new Date(datas[0]+'T12:00:00'):new Date();
-  var dtLim=new Date(dtBase);dtLim.setDate(dtLim.getDate()+dias);
-  r.prazo_data=dtLim.toISOString().split('T')[0];
-  r.prazo_txt=dias+' dias '+(uteis?'uteis':'corridos')+' - vence em '+fmtD(r.prazo_data);
-  r.urgencia=dias<=5?'Alta':(dias<=10?'Alta':(dias<=20?'Media':'Baixa'));
-  // Assunto (primeiras linhas significativas)
-  var linhas=txt.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>15;});
-  r.assunto=linhas.slice(0,3).join(' ').substring(0,250);
-  // Acoes
-  var ehAud=t.indexOf('audiencia')>=0||t.indexOf('audi\u00eancia')>=0||t.indexOf('julgamento')>=0||t.indexOf('sess\u00e3o')>=0;
-  if(ehAud&&datas.length>0)r.acoes.push({modulo:'audiencia',desc:r.tipo+' - '+(r.processo||'processo'),data:datas[0],hora:hora,local:r.vara,tipo:t.indexOf('julgamento')>=0?'Julgamento':'Instrucao'});
-  r.acoes.push({modulo:'prazo',desc:r.tipo+' - '+(r.processo||'processo'),data:r.prazo_data,hora:'',local:'',tipo:'Processual'});
-  r.acoes.push({modulo:'tarefa',desc:'Providencias: '+r.tipo+(r.processo?' - '+r.processo:''),data:r.prazo_data,hora:'',local:'',tipo:'Preparacao'});
+
+  // ── Hora
+  var hora='';var mh=txt.match(/(\d{1,2})h(\d{2})|(\d{1,2}):(\d{2})\s*(?:h|hora)/i);
+  if(mh)hora=(mh[1]||mh[3]).padStart(2,'0')+':'+(mh[2]||mh[4]);
+
+  // ── TEOR E PRAZO - identificacao inteligente do ato e prazo
+  // Mapa de atos processuais e seus prazos padrao em dias uteis
+  var ATOS_PRAZOS = [
+    // Prazos especificos mencionados explicitamente
+    {pat:/prazo\s+(?:de\s+)?(\d+)\s+(?:\([\w\s]+\)\s+)?dias?\s+(?:úteis|uteis)/i, dias:null, uteis:true, nomeFn:function(m){return parseInt(m[1]);}},
+    {pat:/prazo\s+(?:de\s+)?(\d+)\s+(?:\([\w\s]+\)\s+)?dias?\s+corridos/i, dias:null, uteis:false, nomeFn:function(m){return parseInt(m[1]);}},
+    {pat:/prazo\s+(?:de\s+)?(\d+)\s+dias?[^úu]/i, dias:null, uteis:true, nomeFn:function(m){return parseInt(m[1]);}},
+    // Atos processuais com prazos padrao
+    {pat:/alega\u00e7\u00f5es\s+finais|alegacoes\s+finais/i, dias:15, uteis:true, nome:'Alegacoes Finais'},
+    {pat:/contra-?raz\u00f5es|contrarrazoes/i, dias:15, uteis:true, nome:'Contrarrazoes'},
+    {pat:/impugna\u00e7\u00e3o|impugnacao/i, dias:15, uteis:true, nome:'Impugnacao'},
+    {pat:/embargos\s+de\s+declara\u00e7\u00e3o|embargos\s+de\s+declaracao/i, dias:5, uteis:true, nome:'Embargos de Declaracao'},
+    {pat:/contesta\u00e7\u00e3o|contestacao/i, dias:15, uteis:true, nome:'Contestacao'},
+    {pat:/recurso\s+ordin\u00e1rio|recurso\s+ordinario/i, dias:8, uteis:true, nome:'Recurso Ordinario'},
+    {pat:/recurso\s+especial/i, dias:15, uteis:true, nome:'Recurso Especial'},
+    {pat:/agravo\s+(?:regimental|interno)/i, dias:15, uteis:true, nome:'Agravo Regimental/Interno'},
+    {pat:/agravo\s+de\s+instrumento/i, dias:15, uteis:true, nome:'Agravo de Instrumento'},
+    {pat:/apela\u00e7\u00e3o|apelacao/i, dias:15, uteis:true, nome:'Apelacao'},
+    {pat:/memorial(?:is)?/i, dias:15, uteis:true, nome:'Memoriais'},
+    {pat:/r\u00e9plica|replica/i, dias:15, uteis:true, nome:'Replica'},
+    {pat:/manifesta\u00e7\u00e3o|manifestacao/i, dias:15, uteis:true, nome:'Manifestacao'},
+    {pat:/esp(?:ecifica)\u00e7\u00e3o\s+de\s+provas|especificacao\s+de\s+provas/i, dias:15, uteis:true, nome:'Especificacao de Provas'},
+    {pat:/pagamento\s+(?:da\s+)?d\u00edvida|pagamento\s+(?:do\s+)?d\u00e9bito/i, dias:5, uteis:true, nome:'Pagamento da Divida'},
+    {pat:/cumpri(?:r|mento)\s+(?:da\s+)?senten\u00e7a/i, dias:15, uteis:true, nome:'Cumprimento de Sentenca'},
+    {pat:/deposi\u00e7\u00e3o|deposicao/i, dias:null, uteis:true, nome:'Depoimento'},
+    {pat:/juntada\s+de\s+documentos/i, dias:15, uteis:true, nome:'Juntada de Documentos'},
+    {pat:/citac\u00e3o|citacao/i, dias:15, uteis:true, nome:'Resposta a Citacao'},
+    {pat:/intima\u00e7\u00e3o\s+para\s+pagamento|intimacao\s+para\s+pagamento/i, dias:3, uteis:true, nome:'Pagamento (Art. 523 CPC)'},
+  ];
+
+  var prazoEncontrado=null;var nomeAto='';var diasPrazo=15;var uteis=true;
+
+  for(var ai=0;ai<ATOS_PRAZOS.length;ai++){
+    var ap=ATOS_PRAZOS[ai];var match=txt.match(ap.pat);
+    if(match){
+      if(ap.nomeFn){diasPrazo=ap.nomeFn(match);uteis=ap.uteis;nomeAto='Prazo de '+diasPrazo+' dias '+(ap.uteis?'uteis':'corridos');}
+      else if(ap.dias){diasPrazo=ap.dias;uteis=ap.uteis;nomeAto=ap.nome;}
+      prazoEncontrado=true;break;
+    }
+  }
+  if(!prazoEncontrado){
+    // Tenta extrair numero de dias em qualquer contexto
+    var mpd=txt.match(/(\d+)\s+dias?\s+(?:para|de\s+prazo|úteis|uteis|corridos)/i);
+    if(mpd){diasPrazo=parseInt(mpd[1]);uteis=t.indexOf('uteis')>=0||t.indexOf('\u00fateis')>=0;}
+  }
+
+  // Identifica o teor/ato a partir do texto
+  var teoresConhecidos=[
+    {pat:/alega\u00e7\u00f5es\s+finais|alegacoes\s+finais/i, nome:'Alegacoes Finais'},
+    {pat:/contra-?raz\u00f5es\s+(?:ao\s+)?recurso|contrarrazoes/i, nome:'Contrarrazoes'},
+    {pat:/contesta\u00e7\u00e3o|contestacao/i, nome:'Contestacao'},
+    {pat:/embargos\s+de\s+declara\u00e7\u00e3o|embargos\s+de\s+declaracao/i, nome:'Embargos de Declaracao'},
+    {pat:/manifesta\u00e7\u00e3o\s+(?:sobre|acerca|quanto)/i, nome:'Manifestacao'},
+    {pat:/especifica\u00e7\u00e3o\s+de\s+provas/i, nome:'Especificacao de Provas'},
+    {pat:/pagamento\s+(?:do\s+)?d\u00e9bito|pagamento\s+(?:da\s+)?d\u00edvida/i, nome:'Pagamento'},
+    {pat:/comprova\u00e7\u00e3o|comprovacao/i, nome:'Comprovacao'},
+    {pat:/juntada\s+de\s+documentos/i, nome:'Juntada de Documentos'},
+    {pat:/memorial(?:is)?/i, nome:'Memoriais'},
+    {pat:/cumprimento\s+(?:da\s+)?senten\u00e7a/i, nome:'Cumprimento de Sentenca'},
+    {pat:/recurso\s+(?:ordin\u00e1rio|ordinario)/i, nome:'Recurso Ordinario'},
+    {pat:/recurso\s+especial/i, nome:'Recurso Especial'},
+    {pat:/apela\u00e7\u00e3o|apelacao/i, nome:'Apelacao'},
+  ];
+  var atorAtual='';
+  for(var ti=0;ti<teoresConhecidos.length;ti++){if(txt.match(teoresConhecidos[ti].pat)){atorAtual=teoresConhecidos[ti].nome;break;}}
+  if(!nomeAto&&atorAtual)nomeAto=atorAtual;
+  if(!nomeAto)nomeAto=r.tipo;
+
+  // ── Calcula data limite
+  var dataBase=r.data_pub||hj();
+  var dataLimite;
+  if(uteis){dataLimite=diasUteis(dataBase,diasPrazo);}
+  else{var dtb=new Date(dataBase+'T12:00:00');dtb.setDate(dtb.getDate()+diasPrazo);dataLimite=dtb.toISOString().split('T')[0];}
+
+  r.prazo_data=dataLimite;
+  r.prazo_txt=diasPrazo+' dias '+(uteis?'uteis':'corridos')+' - vence em '+fmtD(dataLimite);
+  r.urgencia=diasR(dataLimite)<=3?'Alta':(diasR(dataLimite)<=10?'Alta':(diasR(dataLimite)<=20?'Media':'Baixa'));
+
+  // ── Assunto - primeiras linhas relevantes
+  var linhas=txt.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>10;});
+  r.assunto=linhas.slice(0,3).join(' - ').substring(0,300);
+
+  // ── Determina se eh audiencia
+  var ehAud=t.indexOf('audiencia')>=0||t.indexOf('audi\u00eancia')>=0||t.indexOf('julgamento')>=0;
+
+  // ── Monta acoes sugeridas
+  if(ehAud&&datas.length>0){
+    r.acoes.push({modulo:'audiencia',desc:'Audiencia - '+(r.processo||'processo'),data:datas[0],hora:hora,local:r.vara,tipo:t.indexOf('julgamento')>=0?'Julgamento':'Instrucao'});
+  }
+  // Prazo principal com nome do ato
+  r.acoes.push({modulo:'prazo',desc:nomeAto+(r.processo?' - '+r.processo:''),data:dataLimite,hora:'',local:'',tipo:'Processual'});
+  // Tarefa de preparacao
+  if(nomeAto&&nomeAto!==r.tipo){
+    r.acoes.push({modulo:'tarefa',desc:'Preparar: '+nomeAto+(r.processo?' - '+r.processo:''),data:dataLimite,hora:'',local:'',tipo:'Preparacao'});
+  }
   return r;
 }
 
