@@ -723,11 +723,11 @@ function printAgenda(){
 // TABLES
 // ============================================================
 var COLS={
-  prazos:[{k:'descricao',l:'Descricao'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
+  prazos:[{k:'descricao',l:'Descricao'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'tribunal',l:'Tribunal'},{k:'vencimento',l:'Vencimento'},{k:'prazo_fatal',l:'Prazo Fatal'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
   audiencias:[{k:'descricao',l:'Descricao'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'tipo',l:'Tipo'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
   reunioes:[{k:'tipo',l:'Tipo'},{k:'cliente',l:'Cliente'},{k:'data',l:'Data'},{k:'hora',l:'Hora'},{k:'local',l:'Local'},{k:'assunto',l:'Assunto'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
   processos:[{k:'numero',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'parte_contraria',l:'Parte Contraria'},{k:'polo',l:'Polo'},{k:'area',l:'Area'},{k:'tribunal',l:'Tribunal'},{k:'vara',l:'Vara/Juizo'},{k:'comarca',l:'Comarca'},{k:'tipo_acao',l:'Tipo de Acao'},{k:'fase',l:'Fase'},{k:'status',l:'Status'}],
-  tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Prazo'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
+  tarefas:[{k:'descricao',l:'Tarefa'},{k:'processo',l:'Processo'},{k:'cliente',l:'Cliente'},{k:'prazo',l:'Vencimento'},{k:'hora_ini',l:'Hora Ini'},{k:'hora_fim',l:'Hora Fim'},{k:'prioridade',l:'Prioridade'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
   receitas:[{k:'data',l:'Data'},{k:'descricao',l:'Descricao'},{k:'cliente',l:'Cliente'},{k:'tipo',l:'Tipo'},{k:'recorrente',l:'Recorrencia'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}],
   despesas:[{k:'data',l:'Data'},{k:'descricao',l:'Descricao'},{k:'fornecedor',l:'Fornecedor'},{k:'categoria',l:'Categoria'},{k:'valor',l:'Valor'},{k:'status',l:'Status'},{k:'observacao',l:'Obs'}]
 };
@@ -754,7 +754,9 @@ function renderT(type){
   var bd=rows.map(function(row){
     var cs=c.map(function(col){
       var v=row[col.k]||'-';
+      if(col.k==='prazo_fatal'&&row[col.k])return'<td style="color:var(--red);font-weight:700" title="Prazo Fatal">&#9888; '+fmtD(row[col.k])+'</td>';
       if((col.k==='vencimento'||col.k==='data'||col.k==='prazo')&&row[col.k])return'<td>'+fmtD(row[col.k])+'</td>';
+      if((col.k==='hora_ini'||col.k==='hora_fim')&&row[col.k])return'<td>'+row[col.k]+'</td>';
       if(col.k==='valor'){var vc2=type==='receitas'?'vr':'vd';return'<td class="'+vc2+'">'+fmtBRL(row[col.k])+'</td>';}
       if(col.k==='status')return'<td><span class="badge '+(SM[v]||'b-gray')+'">'+v+'</span></td>';
       if(col.k==='prioridade')return'<td><span class="badge '+(PM[v]||'b-gray')+'">'+v+'</span></td>';
@@ -804,11 +806,11 @@ function renderFin(){
 // MODAL FORMS
 // ============================================================
 var FORMS={
-  prazo:{t:'Novo Prazo',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TJ-SP','TRT-3','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vencimento',l:'Vencimento',tp:'date',req:1},{n:'tipo',l:'Tipo',tp:'sel',opts:['Recursal','Processual','Extrajudicial','Judicial','Administrativo']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Concluido','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
+  prazo:{t:'Novo Prazo',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TJ-SP','TRT-3','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vencimento',l:'Vencimento',tp:'date',req:1},{n:'prazo_fatal',l:'Prazo Fatal',tp:'date'},{n:'tipo',l:'Tipo',tp:'sel',opts:['Recursal','Processual','Extrajudicial','Judicial','Administrativo']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Concluido','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   audiencia:{t:'Nova Audiencia',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'hora',l:'Hora',tp:'time'},{n:'local',l:'Local/Vara',tp:'text'},{n:'tipo',l:'Tipo',tp:'sel',opts:['Instrucao','Conciliacao','Julgamento','Depoimento','Sustentacao Oral','Outro']},{n:'status',l:'Status',tp:'sel',opts:['Agendada','Realizado','Cancelada']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   reuniao:{t:'Nova Reuniao / Atendimento',f:[{n:'tipo',l:'Tipo',tp:'sel',opts:['Atendimento','Reuniao','Consulta','Videoconferencia']},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'hora',l:'Hora',tp:'time'},{n:'local',l:'Local',tp:'text'},{n:'assunto',l:'Assunto/Pauta',tp:'text',full:1,req:1},{n:'status',l:'Status',tp:'sel',opts:['Agendado','Realizado','Cancelado']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   processo:{t:'Novo Processo',f:[{n:'numero',l:'No do Processo (CNJ)',tp:'text',full:1,req:1},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'parte_contraria',l:'Parte Contraria',tp:'text'},{n:'polo',l:'Polo',tp:'sel',opts:['Ativo','Passivo','Terceiro Interessado']},{n:'area',l:'Area',tp:'sel',opts:['Civel','Trabalhista','Consumidor','Familia','Imobiliario','Previdenciario','Administrativo','Criminal']},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TJ-SP','TRT-3','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vara',l:'Vara/Juizo',tp:'text'},{n:'comarca',l:'Comarca',tp:'text'},{n:'tipo_acao',l:'Tipo de Acao',tp:'text'},{n:'fase',l:'Fase',tp:'sel',opts:['Conhecimento','Recursal','Execucao','Arquivado']},{n:'status',l:'Status',tp:'sel',opts:['Ativo','Suspenso','Arquivado','Extinto']}]},
-  tarefa:{t:'Nova Tarefa',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente',tp:'text'},{n:'prazo',l:'Prazo',tp:'date'},{n:'prioridade',l:'Prioridade',tp:'sel',opts:['Alta','Media','Baixa']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Em andamento','Concluida']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
+  tarefa:{t:'Nova Tarefa',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente',tp:'text'},{n:'prazo',l:'Vencimento',tp:'date'},{n:'hora_ini',l:'Hora Inicial',tp:'time'},{n:'hora_fim',l:'Hora Final',tp:'time'},{n:'prioridade',l:'Prioridade',tp:'sel',opts:['Alta','Media','Baixa']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Em andamento','Concluida']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   receita:{t:'Nova Receita / Honorario',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'cliente',l:'Cliente',tp:'text',req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'valor',l:'Valor (R$)',tp:'number',req:1},{n:'data',l:'Data / 1a Parcela',tp:'date',req:1},{n:'tipo',l:'Tipo',tp:'sel',opts:['Honorarios Contratuais','Honorarios Exito','Assessoria Mensal','Consulta','Elaboracao de Documento','Outros']},{n:'recorrente',l:'Recorrencia',tp:'sel',opts:['Nao','Mensal','Bimestral','Trimestral','Semestral','Anual']},{n:'parcelas',l:'No de Parcelas',tp:'number'},{n:'status',l:'Status',tp:'sel',opts:['Recebido','Pendente','Parcial','Inadimplente']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   despesa:{t:'Nova Despesa',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'fornecedor',l:'Fornecedor/Credor',tp:'text'},{n:'valor',l:'Valor (R$)',tp:'number',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'categoria',l:'Categoria',tp:'sel',opts:['Aluguel','Pessoal','Custas Processuais','Marketing','TI / Software','Telefone / Internet','Materiais','Outros']},{n:'status',l:'Status',tp:'sel',opts:['Pago','Pendente','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]}
 };
@@ -1299,11 +1301,11 @@ function importJSON(inp){
 // ============================================================
 function exportExcel(){
   var wb=XLSX.utils.book_new();
-  [{n:'Prazos',d:D.prazos,c:['descricao','processo','cliente','tribunal','vencimento','tipo','status','observacao'],h:['Descricao','Processo','Cliente','Tribunal','Vencimento','Tipo','Status','Obs']},
+  [{n:'Prazos',d:D.prazos,c:['descricao','processo','cliente','tribunal','vencimento','prazo_fatal','tipo','status','observacao'],h:['Descricao','Processo','Cliente','Tribunal','Vencimento','Prazo Fatal','Tipo','Status','Obs']},
    {n:'Audiencias',d:D.audiencias,c:['descricao','processo','cliente','data','hora','local','tipo','status','observacao'],h:['Descricao','Processo','Cliente','Data','Hora','Local','Tipo','Status','Obs']},
    {n:'Reunioes',d:D.reunioes,c:['tipo','cliente','data','hora','local','assunto','status','observacao'],h:['Tipo','Cliente','Data','Hora','Local','Assunto','Status','Obs']},
    {n:'Processos',d:D.processos,c:['numero','cliente','parte_contraria','polo','area','tribunal','vara','comarca','tipo_acao','fase','status'],h:['Processo','Cliente','Parte Contraria','Polo','Area','Tribunal','Vara','Comarca','Tipo de Acao','Fase','Status']},
-   {n:'Tarefas',d:D.tarefas,c:['descricao','processo','cliente','prazo','prioridade','status','observacao'],h:['Tarefa','Processo','Cliente','Prazo','Prioridade','Status','Obs']},
+   {n:'Tarefas',d:D.tarefas,c:['descricao','processo','cliente','prazo','hora_ini','hora_fim','prioridade','status','observacao'],h:['Tarefa','Processo','Cliente','Vencimento','Hora Ini','Hora Fim','Prioridade','Status','Obs']},
    {n:'Receitas',d:D.receitas,c:['data','descricao','cliente','processo','tipo','valor','status','observacao'],h:['Data','Descricao','Cliente','Processo','Tipo','Valor','Status','Obs']},
    {n:'Despesas',d:D.despesas,c:['data','descricao','fornecedor','categoria','valor','status','observacao'],h:['Data','Descricao','Fornecedor','Categoria','Valor','Status','Obs']}
   ].forEach(function(s){var rows=[s.h].concat(s.d.map(function(r){return s.c.map(function(c){return r[c]||'';});}));var ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=s.h.map(function(_,i){return{wch:Math.max(s.h[i].length,12)};});XLSX.utils.book_append_sheet(wb,ws,s.n);});
@@ -1478,10 +1480,12 @@ function syncAgenda(type){
     else if(type==='audiencias')titulo='AUDIENCIA: '+item.descricao+(item.cliente?' - '+item.cliente:'');
     else titulo='TAREFA: '+item.descricao+(item.cliente?' - '+item.cliente:'');
     desc='Processo: '+(item.processo||'-')+' | Cliente: '+(item.cliente||'-')+' | Status: '+(item.status||'-');
-    var hora=item.hora||'09:00';var partes=hora.split(':');
+    var hora=item.hora||item.hora_ini||'09:00';var partes=hora.split(':');
     var startDt=dataField+'T'+hora+':00';
-    var endH=String(parseInt(partes[0])+(partes[1]==='00'?1:1)).padStart(2,'0');
-    var endDt=dataField+'T'+endH+':'+partes[1]+':00';
+    var endHora=item.hora_fim||'';
+    var endDt;
+    if(endHora){endDt=dataField+'T'+endHora+':00';}
+    else{var endH=String(parseInt(partes[0])+1).padStart(2,'0');endDt=dataField+'T'+endH+':'+partes[1]+':00';}
     var ev={summary:titulo,description:desc,start:{dateTime:startDt,timeZone:'America/Bahia'},end:{dateTime:endDt,timeZone:'America/Bahia'},reminders:{useDefault:false,overrides:[{method:'popup',minutes:1440},{method:'popup',minutes:60}]}};
     return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{Authorization:'Bearer '+calToken,'Content-Type':'application/json'},body:JSON.stringify(ev)}).then(function(r){return r.json();}).catch(function(){return null;});
   });
