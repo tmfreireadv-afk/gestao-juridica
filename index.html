@@ -260,6 +260,7 @@ textarea.fc{resize:vertical;min-height:65px}
         <input class="si" placeholder="Buscar prazo..." oninput="renderT('prazos')">
         <button class="btn bp" onclick="openM('prazo')">+ Novo Prazo</button>
         <button class="btn bgh" onclick="printT('prazos')">&#128438; Imprimir</button>
+        <button class="btn bgh" onclick="syncAgenda('prazos')" style="color:#1a73e8;border-color:#1a73e8;font-weight:700">&#128197; Google Agenda</button>
       </div>
       <div class="frow">
         <span class="fl">Status:</span>
@@ -278,6 +279,7 @@ textarea.fc{resize:vertical;min-height:65px}
         <input class="si" placeholder="Buscar audiencia..." oninput="renderT('audiencias')">
         <button class="btn bp" onclick="openM('audiencia')">+ Nova Audiencia</button>
         <button class="btn bgh" onclick="printT('audiencias')">&#128438; Imprimir</button>
+        <button class="btn bgh" onclick="syncAgenda('audiencias')" style="color:#1a73e8;border-color:#1a73e8;font-weight:700">&#128197; Google Agenda</button>
       </div>
       <div class="frow">
         <span class="fl">Status:</span>
@@ -323,6 +325,7 @@ textarea.fc{resize:vertical;min-height:65px}
         <input class="si" placeholder="Buscar tarefa..." oninput="renderT('tarefas')">
         <button class="btn bp" onclick="openM('tarefa')">+ Nova Tarefa</button>
         <button class="btn bgh" onclick="printT('tarefas')">&#128438; Imprimir</button>
+        <button class="btn bgh" onclick="syncAgenda('tarefas')" style="color:#1a73e8;border-color:#1a73e8;font-weight:700">&#128197; Google Agenda</button>
       </div>
       <div class="frow">
         <span class="fl">Prioridade:</span>
@@ -490,7 +493,7 @@ textarea.fc{resize:vertical;min-height:65px}
 // ============================================================
 var CID='930245875529-csrmekbjigv80q4jvevrrbm7g3mou83t.apps.googleusercontent.com';
 var FNAME='gestao_juridica_dados.json';
-var tc=null,at=null,fid=null,ue='',stout=null,gauth=false,gtok=null,gcache=[],bups=[];
+var tc=null,at=null,fid=null,ue='',stout=null,gauth=false,gtok=null,gcache=[],bups=[],calToken=null;
 var lastAnalise=null,histAnalise=[];
 
 // ============================================================
@@ -557,7 +560,7 @@ function fetchUI(){
   return fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+at}}).then(function(r){return r.json();}).then(function(u){ue=u.email||'';document.getElementById('dv-user').textContent=ue;localStorage.setItem('gjm',JSON.stringify({f:fid,e:ue}));}).catch(function(){});
 }
 function loginGoogle(){if(!tc){toast('Aguarde...','info');return;}tc.requestAccessToken();}
-function logoutGoogle(){if(at)google.accounts.oauth2.revoke(at,function(){});at=null;fid=null;ue='';gauth=false;gtok=null;localStorage.removeItem('gjm');updateDvUI(false);setSS('off','Offline');toast('Desconectado.','info');}
+function logoutGoogle(){if(at)google.accounts.oauth2.revoke(at,function(){});at=null;fid=null;ue='';gauth=false;gtok=null;calToken=null;localStorage.removeItem('gjm');updateDvUI(false);setSS('off','Offline');toast('Desconectado.','info');}
 function updateDvUI(c){
   var btn=document.getElementById('dv-btn'),ud=document.getElementById('dv-user'),dr=document.getElementById('dv-row');
   if(c){btn.className='dv-btn ativo';btn.innerHTML='&#10003; Drive Conectado';btn.onclick=null;ud.style.display='block';ud.textContent=ue;dr.style.display='flex';}
@@ -1442,7 +1445,24 @@ window.addEventListener('beforeunload',function(e){
 // GOOGLE AGENDA
 // ============================================================
 function syncAgenda(type){
-  if(!at){toast('Conecte o Google Drive primeiro para usar o Google Agenda.','info');return;}
+  if(!at){toast('Conecte o Google Drive primeiro.','info');return;}
+  // Google Calendar needs explicit permission - request if not yet authorized
+  if(!calToken){
+    toast('Solicitando permissao do Google Agenda...','info');
+    var calClient=google.accounts.oauth2.initTokenClient({
+      client_id:CID,
+      scope:'https://www.googleapis.com/auth/calendar.events',
+      prompt:'consent',
+      callback:function(r){
+        if(r.error){toast('Erro ao autorizar Google Agenda: '+r.error,'err');return;}
+        calToken=r.access_token;
+        toast('Google Agenda autorizado! Enviando eventos...','ok');
+        syncAgenda(type);
+      }
+    });
+    calClient.requestAccessToken();
+    return;
+  }
   var items=D[type]||[];
   var pendentes=items.filter(function(i){
     var s=i.status||'';
@@ -1463,7 +1483,7 @@ function syncAgenda(type){
     var endH=String(parseInt(partes[0])+(partes[1]==='00'?1:1)).padStart(2,'0');
     var endDt=dataField+'T'+endH+':'+partes[1]+':00';
     var ev={summary:titulo,description:desc,start:{dateTime:startDt,timeZone:'America/Bahia'},end:{dateTime:endDt,timeZone:'America/Bahia'},reminders:{useDefault:false,overrides:[{method:'popup',minutes:1440},{method:'popup',minutes:60}]}};
-    return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{Authorization:'Bearer '+at,'Content-Type':'application/json'},body:JSON.stringify(ev)}).then(function(r){return r.json();}).catch(function(){return null;});
+    return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{Authorization:'Bearer '+calToken,'Content-Type':'application/json'},body:JSON.stringify(ev)}).then(function(r){return r.json();}).catch(function(){return null;});
   });
   Promise.all(promises).then(function(results){
     var ok=results.filter(function(r){return r&&r.id;}).length;
