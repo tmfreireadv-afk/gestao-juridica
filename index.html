@@ -198,7 +198,11 @@ textarea.fc{resize:vertical;min-height:65px}
       <button class="dv-b" onclick="syncDrive('upload')">&#8679; Salvar</button>
       <button class="dv-b" onclick="syncDrive('download')">&#8681; Carregar</button>
       <button class="dv-b diag" onclick="abrirDiag()">&#128269; Recuperar</button>
-      <button class="dv-b sair" onclick="logoutGoogle()">Sair</button>
+      <button class="dv-b" onclick="backupCompleto()" style="color:#2e7d5e;border-color:rgba(46,125,94,.3)">&#128190; Backup</button>
+      <button class="dv-b sair" onclick="sairSistema()">&#128682; Sair</button>
+    </div>
+    <div class="dv-row" style="margin-top:4px">
+      <button class="dv-b" onclick="backupCompleto()" style="color:#2e7d5e;border-color:rgba(46,125,94,.3);width:100%;min-width:unset">&#128190; Backup Manual dos Dados</button>
     </div>
   </div>
 </aside>
@@ -346,10 +350,13 @@ textarea.fc{resize:vertical;min-height:65px}
         <div class="ttb">
           <input class="si" placeholder="Buscar receita..." oninput="renderT('receitas')">
           <button class="btn bp" onclick="openM('receita')">+ Nova Receita</button>
+          <button class="btn bgh" onclick="printFin('receitas')">&#128438; Imprimir</button>
         </div>
         <div class="frow">
           <span class="fl">Status:</span>
           <select onchange="renderT('receitas')"><option value="">Todos</option><option>Recebido</option><option>Pendente</option><option>Parcial</option><option>Inadimplente</option></select>
+          <span class="fl">Cliente:</span>
+          <select id="fin-cli-filter" onchange="renderT('receitas')"><option value="">Todos</option></select>
         </div>
         <div id="tb-receitas"></div>
       </div>
@@ -359,6 +366,7 @@ textarea.fc{resize:vertical;min-height:65px}
         <div class="ttb">
           <input class="si" placeholder="Buscar despesa..." oninput="renderT('despesas')">
           <button class="btn bp" onclick="openM('despesa')">+ Nova Despesa</button>
+          <button class="btn bgh" onclick="printFin('despesas')">&#128438; Imprimir</button>
         </div>
         <div class="frow">
           <span class="fl">Categoria:</span>
@@ -543,7 +551,7 @@ function seedData(){
 // GOOGLE AUTH
 // ============================================================
 function initGoogle(){
-  tc=google.accounts.oauth2.initTokenClient({client_id:CID,scope:'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly',callback:function(r){if(r.error){toast('Erro Drive: '+r.error,'err');return;}at=r.access_token;fetchUI().then(function(){updateDvUI(true);setSS('ok','Drive conectado');toast('Drive conectado!','ok');syncDrive('download',true);});}});
+  tc=google.accounts.oauth2.initTokenClient({client_id:CID,scope:'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/calendar.events',callback:function(r){if(r.error){toast('Erro Drive: '+r.error,'err');return;}at=r.access_token;fetchUI().then(function(){updateDvUI(true);setSS('ok','Drive conectado');toast('Drive conectado!','ok');syncDrive('download',true);});}});
 }
 function fetchUI(){
   return fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+at}}).then(function(r){return r.json();}).then(function(u){ue=u.email||'';document.getElementById('dv-user').textContent=ue;localStorage.setItem('gjm',JSON.stringify({f:fid,e:ue}));}).catch(function(){});
@@ -663,14 +671,13 @@ function renderDash(){
   // Agenda hoje
   var h=hj();var ativos=['Pendente','Agendada','Agendado','Inadimplente','Vencido','Em andamento'];
   var itens=[];
-  D.prazos.filter(function(p){return p.vencimento===h&&ativos.indexOf(p.status)>=0;}).forEach(function(p){itens.push({hora:'-',desc:p.descricao,meta:'Prazo - '+p.cliente});});
-  D.audiencias.filter(function(a){return a.data===h&&ativos.indexOf(a.status)>=0;}).forEach(function(a){itens.push({hora:a.hora||'-',desc:a.descricao,meta:'Audiencia - '+a.cliente});});
-  D.reunioes.filter(function(r){return r.data===h&&ativos.indexOf(r.status)>=0;}).forEach(function(r){itens.push({hora:r.hora||'-',desc:r.assunto,meta:r.tipo+' - '+r.cliente});});
-  D.tarefas.filter(function(t){return t.prazo===h&&ativos.indexOf(t.status)>=0;}).forEach(function(t){itens.push({hora:'-',desc:t.descricao,meta:'Tarefa - '+(t.cliente||'Geral')});});
-  D.receitas.filter(function(r){return r.data===h&&(r.status==='Pendente'||r.status==='Inadimplente');}).forEach(function(r){itens.push({hora:'-',desc:r.descricao,meta:'Recebimento - '+r.cliente});});
+  D.prazos.filter(function(p){return p.vencimento===h&&ativos.indexOf(p.status)>=0;}).forEach(function(p){itens.push({hora:'-',desc:p.descricao,meta:'Prazo - '+p.cliente,tipo:'prazos',id:p.id});});
+  D.audiencias.filter(function(a){return a.data===h&&ativos.indexOf(a.status)>=0;}).forEach(function(a){itens.push({hora:a.hora||'-',desc:a.descricao,meta:'Audiencia - '+a.cliente,tipo:'audiencias',id:a.id});});
+  D.reunioes.filter(function(r){return r.data===h&&ativos.indexOf(r.status)>=0;}).forEach(function(r){itens.push({hora:r.hora||'-',desc:r.assunto,meta:r.tipo+' - '+r.cliente,tipo:'reunioes',id:r.id});});
+  D.tarefas.filter(function(t){return t.prazo===h&&ativos.indexOf(t.status)>=0;}).forEach(function(t){itens.push({hora:'-',desc:t.descricao,meta:'Tarefa - '+(t.cliente||'Geral'),tipo:'tarefas',id:t.id});});
+  D.receitas.filter(function(r){return r.data===h&&(r.status==='Pendente'||r.status==='Inadimplente');}).forEach(function(r){itens.push({hora:'-',desc:r.descricao,meta:'Recebimento - '+r.cliente,tipo:'receitas',id:r.id});});
   itens.sort(function(a,b){return a.hora.localeCompare(b.hora);});
-  document.getElementById('ag-hoje').innerHTML=itens.length?itens.map(function(i){return '<div class="ai"><div class="ai-h">'+i.hora+'</div><div><div class="ai-d">'+i.desc+'</div><div class="ai-m">'+i.meta+'</div></div></div>';}).join(''):'<div class="empty">Nenhum compromisso pendente para hoje.</div>';
-  // Prazos criticos
+  document.getElementById('ag-hoje').innerHTML=itens.length?itens.map(function(i){return'<div class="ai" style="align-items:center"><div class="ai-h">'+i.hora+'</div><div style="flex:1"><div class="ai-d">'+i.desc+'</div><div class="ai-m">'+i.meta+'</div></div><button class="btn bgh bsm" onclick="editItem(\'' +i.tipo+ '\','+i.id+')" style="flex-shrink:0;font-size:10px;margin-left:8px">Editar</button></div>';}).join(''):'<div class="empty">Nenhum compromisso pendente para hoje.</div>'; // Prazos criticos
   var crit=D.prazos.filter(function(p){return p.status==='Pendente'&&diasR(p.vencimento)<=7;}).sort(function(a,b){return(a.vencimento||'').localeCompare(b.vencimento||'');});
   document.getElementById('pr-criticos').innerHTML=crit.length?'<table><thead><tr><th>Prazo</th><th>Processo</th><th>Cliente</th><th>Tribunal</th><th>Vencimento</th><th>Restam</th></tr></thead><tbody>'+crit.map(function(p){var d=diasR(p.vencimento);var cd=d<0?'<span class="cd v">Vencido</span>':d===0?'<span class="cd u">HOJE</span>':d<=3?'<span class="cd u">'+d+'d</span>':d<=7?'<span class="cd a">'+d+'d</span>':'<span class="cd ok">'+d+'d</span>';return'<tr class="'+(d<=2?'urg':'')+'" ><td><strong>'+p.descricao+'</strong></td><td style="font-size:11px;color:#888">'+(p.processo||'-')+'</td><td>'+p.cliente+'</td><td><span class="badge b-blue">'+p.tribunal+'</span></td><td>'+fmtD(p.vencimento)+'</td><td>'+cd+'</td></tr>';}).join('')+'</tbody></table>':'<div class="empty">Sem prazos criticos nos proximos 7 dias.</div>';
 }
@@ -794,10 +801,10 @@ function renderFin(){
 // MODAL FORMS
 // ============================================================
 var FORMS={
-  prazo:{t:'Novo Prazo',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vencimento',l:'Vencimento',tp:'date',req:1},{n:'tipo',l:'Tipo',tp:'sel',opts:['Recursal','Processual','Extrajudicial','Judicial','Administrativo']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Concluido','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
+  prazo:{t:'Novo Prazo',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TJ-SP','TRT-3','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vencimento',l:'Vencimento',tp:'date',req:1},{n:'tipo',l:'Tipo',tp:'sel',opts:['Recursal','Processual','Extrajudicial','Judicial','Administrativo']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Concluido','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   audiencia:{t:'Nova Audiencia',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'hora',l:'Hora',tp:'time'},{n:'local',l:'Local/Vara',tp:'text'},{n:'tipo',l:'Tipo',tp:'sel',opts:['Instrucao','Conciliacao','Julgamento','Depoimento','Sustentacao Oral','Outro']},{n:'status',l:'Status',tp:'sel',opts:['Agendada','Realizado','Cancelada']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   reuniao:{t:'Nova Reuniao / Atendimento',f:[{n:'tipo',l:'Tipo',tp:'sel',opts:['Atendimento','Reuniao','Consulta','Videoconferencia']},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'hora',l:'Hora',tp:'time'},{n:'local',l:'Local',tp:'text'},{n:'assunto',l:'Assunto/Pauta',tp:'text',full:1,req:1},{n:'status',l:'Status',tp:'sel',opts:['Agendado','Realizado','Cancelado']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
-  processo:{t:'Novo Processo',f:[{n:'numero',l:'No do Processo (CNJ)',tp:'text',full:1,req:1},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'parte_contraria',l:'Parte Contraria',tp:'text'},{n:'polo',l:'Polo',tp:'sel',opts:['Ativo','Passivo','Terceiro Interessado']},{n:'area',l:'Area',tp:'sel',opts:['Civel','Trabalhista','Consumidor','Familia','Imobiliario','Previdenciario','Administrativo','Criminal']},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vara',l:'Vara/Juizo',tp:'text'},{n:'comarca',l:'Comarca',tp:'text'},{n:'tipo_acao',l:'Tipo de Acao',tp:'text'},{n:'fase',l:'Fase',tp:'sel',opts:['Conhecimento','Recursal','Execucao','Arquivado']},{n:'status',l:'Status',tp:'sel',opts:['Ativo','Suspenso','Arquivado','Extinto']}]},
+  processo:{t:'Novo Processo',f:[{n:'numero',l:'No do Processo (CNJ)',tp:'text',full:1,req:1},{n:'cliente',l:'Cliente/Parte',tp:'text',req:1},{n:'parte_contraria',l:'Parte Contraria',tp:'text'},{n:'polo',l:'Polo',tp:'sel',opts:['Ativo','Passivo','Terceiro Interessado']},{n:'area',l:'Area',tp:'sel',opts:['Civel','Trabalhista','Consumidor','Familia','Imobiliario','Previdenciario','Administrativo','Criminal']},{n:'tribunal',l:'Tribunal',tp:'sel',opts:['TJ-BA','TJ-SP','TRT-3','TRT-5','STJ','TRF-1','JEC','TST','STF','Outro']},{n:'vara',l:'Vara/Juizo',tp:'text'},{n:'comarca',l:'Comarca',tp:'text'},{n:'tipo_acao',l:'Tipo de Acao',tp:'text'},{n:'fase',l:'Fase',tp:'sel',opts:['Conhecimento','Recursal','Execucao','Arquivado']},{n:'status',l:'Status',tp:'sel',opts:['Ativo','Suspenso','Arquivado','Extinto']}]},
   tarefa:{t:'Nova Tarefa',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'cliente',l:'Cliente',tp:'text'},{n:'prazo',l:'Prazo',tp:'date'},{n:'prioridade',l:'Prioridade',tp:'sel',opts:['Alta','Media','Baixa']},{n:'status',l:'Status',tp:'sel',opts:['Pendente','Em andamento','Concluida']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   receita:{t:'Nova Receita / Honorario',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'cliente',l:'Cliente',tp:'text',req:1},{n:'processo',l:'No do Processo',tp:'text'},{n:'valor',l:'Valor (R$)',tp:'number',req:1},{n:'data',l:'Data / 1a Parcela',tp:'date',req:1},{n:'tipo',l:'Tipo',tp:'sel',opts:['Honorarios Contratuais','Honorarios Exito','Assessoria Mensal','Consulta','Elaboracao de Documento','Outros']},{n:'recorrente',l:'Recorrencia',tp:'sel',opts:['Nao','Mensal','Bimestral','Trimestral','Semestral','Anual']},{n:'parcelas',l:'No de Parcelas',tp:'number'},{n:'status',l:'Status',tp:'sel',opts:['Recebido','Pendente','Parcial','Inadimplente']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]},
   despesa:{t:'Nova Despesa',f:[{n:'descricao',l:'Descricao',tp:'text',full:1,req:1},{n:'fornecedor',l:'Fornecedor/Credor',tp:'text'},{n:'valor',l:'Valor (R$)',tp:'number',req:1},{n:'data',l:'Data',tp:'date',req:1},{n:'categoria',l:'Categoria',tp:'sel',opts:['Aluguel','Pessoal','Custas Processuais','Marketing','TI / Software','Telefone / Internet','Materiais','Outros']},{n:'status',l:'Status',tp:'sel',opts:['Pago','Pendente','Vencido']},{n:'observacao',l:'Observacoes',tp:'ta',full:1}]}
@@ -1303,6 +1310,166 @@ function exportExcel(){
   XLSX.writeFile(wb,'gestao_juridica_'+new Date().toISOString().slice(0,10)+'.xlsx');
 }
 
+
+// ============================================================
+// FINANCEIRO - FILTRO CLIENTE + PRINT
+// ============================================================
+function atualizarFiltroCliente(){
+  var sel=document.getElementById('fin-cli-filter');if(!sel)return;
+  var val=sel.value;
+  sel.innerHTML='<option value="">Todos</option>';
+  var clis=[...new Set(D.receitas.map(function(r){return r.cliente;}).filter(Boolean))].sort();
+  clis.forEach(function(cl){var o=document.createElement('option');o.value=cl;o.textContent=cl;if(cl===val)o.selected=true;sel.appendChild(o);});
+}
+
+function printFin(type){
+  var c2=COLS[type];
+  var rows=[].concat(D[type]||[]);
+  var hd=c2.map(function(col){return'<th>'+col.l+'</th>';}).join('');
+  var bd=rows.map(function(row){return'<tr>'+c2.map(function(col){var v=row[col.k]||'';if(v&&col.k==='data')v=fmtD(v);if(col.k==='valor')v=fmtBRL(v);return'<td>'+v+'</td>';}).join('')+'</tr>';}).join('');
+  var tot=rows.reduce(function(s,r){return s+(parseFloat(r.valor)||0);},0);
+  var w=window.open('','_blank');
+  var html='<!DOCTYPE html><html><head><title>Relatorio Financeiro</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px}h2{font-size:15px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#1b3a5c;color:#fff;padding:7px 8px;text-align:left;font-size:10px}td{padding:6px 8px;border-bottom:1px solid #eee}tfoot td{font-weight:700;background:#f9f9f9;border-top:2px solid #ccc}</style><'+'/head><body><h2>Tarcisio Freire Advocacia - '+(type==='receitas'?'Receitas':'Despesas')+'</h2><p style="color:#888;font-size:11px;margin-bottom:14px">Gerado em '+new Date().toLocaleDateString('pt-BR')+'</p><table><thead><tr>'+hd+'</tr><'+'/thead><tbody>'+bd+'</tbody><tfoot><tr><td colspan="'+(c2.length-1)+'" style="text-align:right">TOTAL</td><td>'+fmtBRL(tot)+'</td></tr></tfoot></table><'+'/body><'+'/html>';
+  w.document.write(html);w.document.close();w.print();
+}
+
+// Override renderT to apply client filter for receitas
+var _origRenderT=renderT;
+renderT=function(type){
+  _origRenderT(type);
+  if(type==='receitas')atualizarFiltroCliente();
+  if(type==='receitas'){
+    var sel=document.getElementById('fin-cli-filter');
+    if(sel&&sel.value){
+      var el=document.getElementById('tb-receitas');
+      if(!el)return;
+      var rows=el.querySelectorAll('tbody tr');
+      rows.forEach(function(row){
+        var tds=row.querySelectorAll('td');
+        // cliente is column index 2 in receitas (data, desc, cliente...)
+        var found=false;tds.forEach(function(td){if(td.textContent===sel.value)found=true;});
+        row.style.display=found?'':'none';
+      });
+    }
+  }
+};
+
+// ============================================================
+// RECEITA PARCIAL - CAMPO VALOR RESTANTE
+// ============================================================
+// Override baixar to handle parcial
+var _origBaixar=baixar;
+baixar=function(type,id){
+  if(type==='receitas'){
+    var item=D.receitas.find(function(r){return r.id===id;});
+    if(!item)return;
+    // Pergunta se total ou parcial
+    var op=confirm('Clique OK para Recebimento TOTAL. Clique Cancelar para marcar como PARCIAL (informar valor pago).');
+    if(op){_origBaixar(type,id);}
+    else{
+      var valPago=prompt('Valor efetivamente recebido (R$):', item.valor);
+      if(valPago===null)return;
+      var pago=parseFloat(valPago.replace(',','.'));
+      var total=parseFloat(item.valor)||0;
+      if(isNaN(pago)||pago<=0){toast('Valor invalido.','err');return;}
+      var idx=D.receitas.findIndex(function(r){return r.id===id;});
+      if(idx<0)return;
+      D.receitas[idx].status='Parcial';
+      D.receitas[idx].valor_pago=pago.toFixed(2);
+      D.receitas[idx].valor_restante=(total-pago).toFixed(2);
+      D.receitas[idx].observacao=(D.receitas[idx].observacao||'')+' | Parcial: pago R$'+pago.toFixed(2)+', restam R$'+(total-pago).toFixed(2);
+      saveData();renderT('receitas');renderFin();renderDash();
+      toast('Parcial registrado. Restam '+fmtBRL(total-pago),'ok');
+    }
+  } else {
+    _origBaixar(type,id);
+  }
+};
+
+// Show valor_restante in receitas table
+// Override cols to add valor_restante conditionally - done in renderT display
+
+// ============================================================
+// BACKUP E SAIR
+// ============================================================
+function backupCompleto(){
+  // Salva no Drive E exporta JSON local
+  saveLocal();
+  if(at){
+    syncDrive('upload',false).then(function(){
+      exportJSON();
+      toast('Backup completo: Drive salvo + arquivo JSON gerado!','ok');
+    });
+  } else {
+    exportJSON();
+    toast('Backup JSON gerado! Conecte o Drive para salvar na nuvem.','info');
+  }
+}
+
+function sairSistema(){
+  if(!confirm('Deseja sair do sistema?\n\nSeus dados serao salvos automaticamente antes de sair.'))return;
+  // Salva tudo antes
+  saveLocal();
+  if(at){
+    setSS('saving','Salvando antes de sair...');
+    syncDrive('upload',true).then(function(){
+      setSS('ok','Dados salvos!');
+      toast('Todos os dados foram salvos. Voce pode fechar esta aba.','ok');
+      setTimeout(function(){
+        // Exibe confirmacao final
+        document.body.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:Arial,sans-serif;background:#dceefb"><div style="background:#fff;padding:40px;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.15);text-align:center"><div style="font-size:48px;margin-bottom:16px">&#128274;</div><h2 style="color:#1b3a5c;margin-bottom:8px">Sistema encerrado com sucesso</h2><p style="color:#555;margin-bottom:24px">Todos os seus dados foram salvos no Google Drive.<br>Voce pode fechar esta aba com seguranca.</p><button onclick="location.reload()" style="background:#2563a8;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Reabrir Sistema</button></div></div>';
+      },1500);
+    });
+  } else {
+    exportJSON();
+    toast('Dados salvos localmente. Feche a aba com seguranca.','ok');
+  }
+}
+
+// Auto-save a cada 5 minutos
+setInterval(function(){
+  saveLocal();
+  if(at&&!syncTimeout){syncDrive('upload',true);}
+}, 5*60*1000);
+
+// Avisa antes de fechar a janela
+window.addEventListener('beforeunload',function(e){
+  saveLocal();
+  if(at){syncDrive('upload',true);}
+});
+
+// ============================================================
+// GOOGLE AGENDA
+// ============================================================
+function syncAgenda(type){
+  if(!at){toast('Conecte o Google Drive primeiro para usar o Google Agenda.','info');return;}
+  var items=D[type]||[];
+  var pendentes=items.filter(function(i){
+    var s=i.status||'';
+    return s==='Pendente'||s==='Agendada'||s==='Agendado'||s==='Em andamento';
+  });
+  if(!pendentes.length){toast('Nenhum item pendente para enviar ao Google Agenda.','info');return;}
+  toast('Enviando '+pendentes.length+' item(ns) para o Google Agenda...','info');
+  var promises=pendentes.map(function(item){
+    var dataField=item.vencimento||item.data||item.prazo;
+    if(!dataField)return Promise.resolve(null);
+    var titulo='';var desc='';
+    if(type==='prazos')titulo='PRAZO: '+item.descricao+(item.cliente?' - '+item.cliente:'');
+    else if(type==='audiencias')titulo='AUDIENCIA: '+item.descricao+(item.cliente?' - '+item.cliente:'');
+    else titulo='TAREFA: '+item.descricao+(item.cliente?' - '+item.cliente:'');
+    desc='Processo: '+(item.processo||'-')+' | Cliente: '+(item.cliente||'-')+' | Status: '+(item.status||'-');
+    var hora=item.hora||'09:00';var partes=hora.split(':');
+    var startDt=dataField+'T'+hora+':00';
+    var endH=String(parseInt(partes[0])+(partes[1]==='00'?1:1)).padStart(2,'0');
+    var endDt=dataField+'T'+endH+':'+partes[1]+':00';
+    var ev={summary:titulo,description:desc,start:{dateTime:startDt,timeZone:'America/Bahia'},end:{dateTime:endDt,timeZone:'America/Bahia'},reminders:{useDefault:false,overrides:[{method:'popup',minutes:1440},{method:'popup',minutes:60}]}};
+    return fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{method:'POST',headers:{Authorization:'Bearer '+at,'Content-Type':'application/json'},body:JSON.stringify(ev)}).then(function(r){return r.json();}).catch(function(){return null;});
+  });
+  Promise.all(promises).then(function(results){
+    var ok=results.filter(function(r){return r&&r.id;}).length;
+    toast(ok+' evento(s) enviado(s) para o Google Agenda!','ok');
+  });
+}
 // ============================================================
 // INIT
 // ============================================================
